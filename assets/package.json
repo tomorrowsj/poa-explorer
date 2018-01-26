@@ -11,6 +11,7 @@
     "npm": "5.x"
   },
   "scripts": {
+    "test": "babel-node spec/support/run.js",
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin",
     "eslint": "eslint js/**"
@@ -18,10 +19,15 @@
   "dependencies": {
     "bootstrap-sass": "^3.3.7",
     "phoenix": "file:../deps/phoenix",
-    "phoenix_html": "file:../deps/phoenix_html"
+    "phoenix_html": "file:../deps/phoenix_html",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
   },
   "devDependencies": {
     "babel-brunch": "6.1.1",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
     "brunch": "2.10.9",
     "clean-css-brunch": "2.10.0",
     "eslint": "^4.15.0",
@@ -32,6 +38,8 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-react": "^7.5.1",
     "eslint-plugin-standard": "^3.0.1",
+    "jasmine": "^2.9.0",
+    "jsdom": "^11.6.1",
     "sass-brunch": "github:brunch/sass-brunch#7ffb2e6ebb7380f920a2f594476a3db0654b11b9",
     "uglify-js-brunch": "2.10.0"
   }
