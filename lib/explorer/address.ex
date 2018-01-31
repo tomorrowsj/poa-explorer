@@ -4,6 +4,7 @@ defmodule Explorer.Address do
   use Ecto.Schema
   import Ecto.Changeset
   alias Explorer.Address
+  alias Explorer.Repo
 
   @timestamps_opts [type: Timex.Ecto.DateTime,
                     autogenerate: {Timex.Ecto.DateTime, :autogenerate, []}]
@@ -15,6 +16,12 @@ defmodule Explorer.Address do
 
   @required_attrs ~w(hash)a
   @optional_attrs ~w()a
+
+  def find_or_create_by_hash(hash) do
+    address_attrs = %{hash: hash}
+    address_changeset = Address.changeset(%Address{}, %{hash: hash})
+    Repo.get_by(Address, address_attrs) || Repo.insert!(address_changeset)
+  end
 
   def changeset(%Address{} = address, attrs) do
     address

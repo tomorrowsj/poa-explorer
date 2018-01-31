@@ -5,6 +5,8 @@ defmodule Explorer.FetcherTest do
   alias Explorer.Repo
   alias Explorer.Fetcher
   alias Explorer.Transaction
+  alias Explorer.Address
+  alias Explorer.ToAddress
 
   @raw_block %{
     "difficulty" => "0xfffffffffffffffffffffffffffffffe",
@@ -33,11 +35,10 @@ defmodule Explorer.FetcherTest do
     size: 16,
     timestamp: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
     total_difficulty: 255,
-    transactions: [],
   }
 
   @raw_transaction %{
-    "block_id" => "1",
+    "creates" => nil,
     "hash" => "pepino",
     "value" => "0xde0b6b3a7640000",
     "gas" => "0x21000",
@@ -47,6 +48,7 @@ defmodule Explorer.FetcherTest do
     "publicKey" => "0xb39af9c",
     "r" => "0x9",
     "s" => "0x10",
+    "to" => "0x7a33b7d",
     "standardV" => "0x11",
     "transactionIndex" => "0x12",
     "v" => "0x13",
@@ -65,6 +67,7 @@ defmodule Explorer.FetcherTest do
     standard_v: "0x11",
     transaction_index: "0x12",
     v: "0x13",
+    block_id: 100,
   }
 
   describe "fetch/1" do
@@ -93,8 +96,8 @@ defmodule Explorer.FetcherTest do
       end
     end
 
-    test "When the block has a transaction that it creates a to address" do
-      # use_cassette "fetcher_fetch_with_transaction_for_address" do
+    test "When the block has a transaction that it creates an associated address" do
+      use_cassette "fetcher_fetch_with_transaction_for_address" do
         Fetcher.fetch("0x8d2a8")
 
         query = from address in Explorer.Address,
@@ -102,7 +105,7 @@ defmodule Explorer.FetcherTest do
           join: transaction in Transaction, where: transaction.id == to_address.transaction_id
 
         assert Repo.one(query).hash == "0xb7cffe2ac19b9d5705a24cbe14fef5663af905a6"
-      # end
+      end
     end
   end
 
@@ -124,21 +127,83 @@ defmodule Explorer.FetcherTest do
     end
   end
 
-  describe "extract_transactions/1" do
-    test "that it parses a list of transactions" do
-      transactions = Fetcher.extract_transactions([%{id: 1}, @raw_transaction])
-      assert transactions == [@processed_transaction]
+  describe "extract_transactions/2" do
+    test "that it creates a list of transactions" do
+      block = insert(:block, %{id: 100})
+      transactions = Fetcher.extract_transactions(block, [@raw_transaction])
+      assert List.first(transactions).block_id == 100
     end
   end
 
-  describe "extract_transaction/1" do
+  describe "create_transaction/2" do
+    test "that it creates a transaction" do
+      block = insert(:block)
+      transaction_attrs = %{@raw_transaction | "hash" => "0xab1"}
+      Fetcher.create_transaction(block, transaction_attrs)
+      last_transaction = Transaction |> order_by(desc: :inserted_at) |> Repo.one
+      assert last_transaction.hash == "0xab1"
+    end
+
+    test "that it creates a to address" do
+      block = insert(:block)
+      transaction_attrs = %{@raw_transaction | "to" => "0xSmoothiesRGr8"}
+      Fetcher.create_transaction(block, transaction_attrs)
+      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      assert last_address.hash == "0xsmoothiesrgr8"
+    end
+
+    test "it creates a to address from 'creates' when 'to' is nil" do
+      block = insert(:block)
+      transaction_attrs = %{@raw_transaction | "creates" => "0xSmoothiesRGr8", "to" => nil}
+      Fetcher.create_transaction(block, transaction_attrs)
+      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      assert last_address.hash == "0xsmoothiesrgr8"
+    end
+
+    test "that it creates a relation for the transaction and address" do
+      block = insert(:block)
+      Fetcher.create_transaction(block, @raw_transaction)
+      last_transaction = Transaction |> order_by(desc: :inserted_at) |> Repo.one
+      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      last_to_address = ToAddress |> order_by(desc: :inserted_at)  |> Repo.one
+      assert last_to_address.transaction_id == last_transaction.id
+      assert last_to_address.address_id == last_address.id
+    end
+  end
+
+  describe "create_to_address/2" do
+    test "that it creates a new address when one does not exist" do
+      transaction = insert(:transaction)
+      Fetcher.create_to_address(transaction, "0xFreshPrince")
+      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      assert last_address.hash == "0xfreshprince"
+    end
+
+    test "that it creates a relation for the transaction and address" do
+      transaction = insert(:transaction)
+      Fetcher.create_to_address(transaction, "0xFreshPrince")
+      address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      to_address = ToAddress |> order_by(desc: :inserted_at)  |> Repo.one
+      assert to_address.transaction_id == transaction.id
+      assert to_address.address_id == address.id
+    end
+
+    test "when the address already exists it doesn't insert a new address" do
+      transaction = insert(:transaction)
+      insert(:address, %{hash: "bigmouthbillybass"})
+      Fetcher.create_to_address(transaction, "bigmouthbillybass")
+      assert Address |> Repo.all |> length == 1
+    end
+  end
+
+  describe "extract_transaction/2" do
     test "that it extracts the transaction" do
-      assert Fetcher.extract_transaction(@raw_transaction) == @processed_transaction
+      assert Fetcher.extract_transaction(%{id: 100}, @raw_transaction) == @processed_transaction
     end
 
     test "when the transaction value is zero it returns a decimal" do
       transaction = %{@raw_transaction | "value" => "0x0"}
-      assert Fetcher.extract_transaction(transaction).value == 0
+      assert Fetcher.extract_transaction(%{id: 100}, transaction).value == 0
     end
   end
 

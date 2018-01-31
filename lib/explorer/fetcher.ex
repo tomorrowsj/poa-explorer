@@ -50,9 +50,10 @@ defmodule Explorer.Fetcher  do
   end
 
   def create_transaction(block, transaction) do
-    Transaction.changeset(%Transaction{}, extract_transaction(block, transaction))
+    %Transaction{}
+    |> Transaction.changeset(extract_transaction(block, transaction))
     |> Repo.insert!
-    |> create_to_address(transaction["to"])
+    |> create_to_address(transaction["to"] || transaction["creates"])
   end
 
   def extract_transaction(block, transaction) do
@@ -74,16 +75,14 @@ defmodule Explorer.Fetcher  do
   end
 
   def create_to_address(transaction, hash) do
-    address = Repo.get_by(Address, %{hash: hash})
+    address = Address.find_or_create_by_hash(hash)
+    attrs = %{transaction_id: transaction.id, address_id: address.id}
 
-    address = if !address do
-      Address.changeset(%Address{}, %{hash: hash})
-    end
+    %ToAddress{}
+    |> ToAddress.changeset(attrs)
+    |> Repo.insert
 
-    saved_address = address
-    |> Repo.insert!
-
-    ToAddress.changeset(%ToAddress{}, %{transaction_id: transaction.id, address_id: saved_address.id}) |> Repo.insert
+    transaction
   end
 
   def prepare_block(block) do
