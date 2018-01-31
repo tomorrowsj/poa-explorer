@@ -1,17 +1,24 @@
 defmodule Explorer.Fetcher  do
   alias Explorer.Block
   alias Explorer.Repo
+  alias Explorer.Transaction
+  alias Explorer.Address
+  alias Explorer.ToAddress
   import Ethereumex.HttpClient, only: [eth_get_block_by_number: 2]
 
   @moduledoc false
 
   @dialyzer {:nowarn_function, fetch: 1}
   def fetch(block_number) do
-    block_number
-    |> download_block
-    |> extract_block
-    |> validate_block
-    |> Repo.insert!
+    raw_block = block_number |> download_block
+
+    Repo.transaction fn ->
+      raw_block
+      |> extract_block
+      |> prepare_block
+      |> Repo.insert!
+      |> extract_transactions(raw_block["transactions"])
+    end
   end
 
   @dialyzer {:nowarn_function, download_block: 1}
@@ -33,15 +40,22 @@ defmodule Explorer.Fetcher  do
       size: block["size"] |> decode_integer_field,
       gas_limit: block["gasLimit"] |> decode_integer_field,
       nonce: block["nonce"] || "0",
-      transactions: block["transactions"] |> extract_transactions,
     }
   end
 
-  def extract_transactions(transactions) do
-    transactions |> Enum.map(&extract_transaction/1)
+  def extract_transactions(block, transactions) do
+    Enum.map(transactions, fn(transaction) ->
+      create_transaction(block, transaction)
+    end)
   end
 
-  def extract_transaction(transaction) do
+  def create_transaction(block, transaction) do
+    Transaction.changeset(%Transaction{}, extract_transaction(block, transaction))
+    |> Repo.insert!
+    |> create_to_address(transaction["to"])
+  end
+
+  def extract_transaction(block, transaction) do
     %{
       hash: transaction["hash"],
       value: transaction["value"] |> decode_integer_field,
@@ -55,10 +69,24 @@ defmodule Explorer.Fetcher  do
       standard_v: transaction["standardV"],
       transaction_index: transaction["transactionIndex"],
       v: transaction["v"],
+      block_id: block.id,
     }
   end
 
-  def validate_block(block) do
+  def create_to_address(transaction, hash) do
+    address = Repo.get_by(Address, %{hash: hash})
+
+    address = if !address do
+      Address.changeset(%Address{}, %{hash: hash})
+    end
+
+    saved_address = address
+    |> Repo.insert!
+
+    ToAddress.changeset(%ToAddress{}, %{transaction_id: transaction.id, address_id: saved_address.id}) |> Repo.insert
+  end
+
+  def prepare_block(block) do
     Block.changeset(%Block{}, block)
   end
 

@@ -71,13 +71,7 @@ defmodule Explorer.FetcherTest do
     test "the latest block is copied over from the blockchain" do
       use_cassette "fetcher_fetch" do
         Fetcher.fetch("0x89923")
-
-        last_block = Block
-          |> order_by(desc: :inserted_at)
-          |> limit(1)
-          |> Repo.all
-          |> List.first
-
+        last_block = Block |> order_by(desc: :inserted_at) |> Repo.one
         assert last_block.number == 563491
       end
     end
@@ -85,13 +79,7 @@ defmodule Explorer.FetcherTest do
     test "when the block has a transaction it should be created" do
       use_cassette "fetcher_fetch_with_transaction" do
         Fetcher.fetch("0x8d2a8")
-
-        last_transaction = Transaction
-          |> order_by(desc: :inserted_at)
-          |> limit(1)
-          |> Repo.all
-          |> List.first
-
+        last_transaction = Transaction |> order_by(desc: :inserted_at) |> Repo.one
         assert last_transaction.value == Decimal.new(1000000000000000000)
         assert last_transaction.hash == "0x8cea0c5ffdd96a4dada74066f7416a0957dca278d45a1caec439ba68cbf3f4d6"
       end
@@ -100,15 +88,21 @@ defmodule Explorer.FetcherTest do
     test "when the block has a transaction with zero value it should store that zero value" do
       use_cassette "fetcher_fetch_with_a_zero_value_transaction" do
         Fetcher.fetch("0x918c1")
-
-        last_transaction = Transaction
-          |> order_by(desc: :inserted_at)
-          |> limit(1)
-          |> Repo.all
-          |> List.first
-
+        last_transaction = Transaction |> order_by(desc: :inserted_at) |> Repo.one
         assert last_transaction.value == Decimal.new(0)
       end
+    end
+
+    test "When the block has a transaction that it creates a to address" do
+      # use_cassette "fetcher_fetch_with_transaction_for_address" do
+        Fetcher.fetch("0x8d2a8")
+
+        query = from address in Explorer.Address,
+          join: to_address in Explorer.ToAddress, where: to_address.address_id == address.id,
+          join: transaction in Transaction, where: transaction.id == to_address.transaction_id
+
+        assert Repo.one(query).hash == "0xb7cffe2ac19b9d5705a24cbe14fef5663af905a6"
+      # end
     end
   end
 
@@ -128,15 +122,11 @@ defmodule Explorer.FetcherTest do
     test "when there is no nonce" do
       assert Fetcher.extract_block(@raw_block).nonce == "0"
     end
-
-    test "when there is a transaction" do
-      assert Fetcher.extract_block(@raw_block).transactions
-    end
   end
 
   describe "extract_transactions/1" do
     test "that it parses a list of transactions" do
-      transactions = Fetcher.extract_transactions([@raw_transaction])
+      transactions = Fetcher.extract_transactions([%{id: 1}, @raw_transaction])
       assert transactions == [@processed_transaction]
     end
   end
@@ -165,25 +155,10 @@ defmodule Explorer.FetcherTest do
     end
   end
 
-  describe "validate_block/1" do
+  describe "prepare_block/1" do
     test "returns a valid changeset for an extracted block" do
-      changeset = @raw_block |> Fetcher.extract_block |> Fetcher.validate_block
+      changeset = @raw_block |> Fetcher.extract_block |> Fetcher.prepare_block
       assert changeset.valid?
-    end
-
-    test "that it puts a nested transaction into a changeset" do
-      block = %{@raw_block | "transactions" => [@raw_transaction]}
-      changeset = block |> Fetcher.extract_block |> Fetcher.validate_block
-      first_transaction = changeset.changes.transactions |> List.first
-      assert first_transaction.changes.hash == "pepino"
-    end
-
-    test "that it validates a nested transaction" do
-      transaction = %{@raw_transaction | "hash" => ""}
-      block = %{@raw_block | "transactions" => [transaction]}
-      changeset = block |> Fetcher.extract_block |> Fetcher.validate_block
-      transaction_changeset = changeset.changes.transactions |> List.first
-      assert transaction_changeset.errors[:hash] == {"can't be blank", [validation: :required]}
     end
   end
 end
