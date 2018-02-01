@@ -4,4 +4,6 @@ defmodule Explorer.Factory do
   use Explorer.BlockFactory
   use Explorer.TransactionFactory
   use Explorer.AddressFactory
+  use Explorer.ToAddressFactory
+  use Explorer.FromAddressFactory
 end

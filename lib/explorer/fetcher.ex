@@ -4,6 +4,7 @@ defmodule Explorer.Fetcher  do
   alias Explorer.Transaction
   alias Explorer.Address
   alias Explorer.ToAddress
+  alias Explorer.FromAddress
   import Ethereumex.HttpClient, only: [eth_get_block_by_number: 2]
 
   @moduledoc false
@@ -53,6 +54,7 @@ defmodule Explorer.Fetcher  do
     %Transaction{}
     |> Transaction.changeset(extract_transaction(block, transaction))
     |> Repo.insert!
+    |> create_from_address(transaction["from"])
     |> create_to_address(transaction["to"] || transaction["creates"])
   end
 
@@ -80,6 +82,17 @@ defmodule Explorer.Fetcher  do
 
     %ToAddress{}
     |> ToAddress.changeset(attrs)
+    |> Repo.insert
+
+    transaction
+  end
+
+  def create_from_address(transaction, hash) do
+    address = Address.find_or_create_by_hash(hash)
+    attrs = %{transaction_id: transaction.id, address_id: address.id}
+
+    %FromAddress{}
+    |> FromAddress.changeset(attrs)
     |> Repo.insert
 
     transaction

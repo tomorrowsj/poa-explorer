@@ -7,6 +7,7 @@ defmodule Explorer.FetcherTest do
   alias Explorer.Transaction
   alias Explorer.Address
   alias Explorer.ToAddress
+  alias Explorer.FromAddress
 
   @raw_block %{
     "difficulty" => "0xfffffffffffffffffffffffffffffffe",
@@ -41,6 +42,7 @@ defmodule Explorer.FetcherTest do
     "creates" => nil,
     "hash" => "pepino",
     "value" => "0xde0b6b3a7640000",
+    "from" => "0x34d0ef2c",
     "gas" => "0x21000",
     "gasPrice" => "0x10000",
     "input" => "0x5c8eff12",
@@ -96,7 +98,7 @@ defmodule Explorer.FetcherTest do
       end
     end
 
-    test "When the block has a transaction that it creates an associated address" do
+    test "When the block has a transaction that it creates an associated 'to address'" do
       use_cassette "fetcher_fetch_with_transaction_for_address" do
         Fetcher.fetch("0x8d2a8")
 
@@ -105,6 +107,18 @@ defmodule Explorer.FetcherTest do
           join: transaction in Transaction, where: transaction.id == to_address.transaction_id
 
         assert Repo.one(query).hash == "0xb7cffe2ac19b9d5705a24cbe14fef5663af905a6"
+      end
+    end
+
+    test "When the block has a transaction that it creates an associated 'from address'" do
+      use_cassette "fetcher_fetch_with_transaction_for_address" do
+        Fetcher.fetch("0x8d2a8")
+
+        query = from address in Explorer.Address,
+          join: from_address in Explorer.FromAddress, where: from_address.address_id == address.id,
+          join: transaction in Transaction, where: transaction.id == from_address.transaction_id
+
+        assert Repo.one(query).hash == "0x9a4a90e2732f3fa4087b0bb4bf85c76d14833df1"
       end
     end
   end
@@ -144,30 +158,34 @@ defmodule Explorer.FetcherTest do
       assert last_transaction.hash == "0xab1"
     end
 
-    test "that it creates a to address" do
+    test "that it creates a 'to address'" do
       block = insert(:block)
       transaction_attrs = %{@raw_transaction | "to" => "0xSmoothiesRGr8"}
       Fetcher.create_transaction(block, transaction_attrs)
-      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
-      assert last_address.hash == "0xsmoothiesrgr8"
+      assert Repo.get_by(Address, hash: "0xsmoothiesrgr8")
     end
 
-    test "it creates a to address from 'creates' when 'to' is nil" do
+    test "it creates a 'to address' from 'creates' when 'to' is nil" do
       block = insert(:block)
       transaction_attrs = %{@raw_transaction | "creates" => "0xSmoothiesRGr8", "to" => nil}
       Fetcher.create_transaction(block, transaction_attrs)
-      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
-      assert last_address.hash == "0xsmoothiesrgr8"
+      last_address = Repo.get_by(Address, hash: "0xsmoothiesrgr8")
+      assert last_address
     end
 
-    test "that it creates a relation for the transaction and address" do
+    test "that it creates a relation for the transaction and 'to address'" do
       block = insert(:block)
       Fetcher.create_transaction(block, @raw_transaction)
-      last_transaction = Transaction |> order_by(desc: :inserted_at) |> Repo.one
-      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
-      last_to_address = ToAddress |> order_by(desc: :inserted_at)  |> Repo.one
-      assert last_to_address.transaction_id == last_transaction.id
-      assert last_to_address.address_id == last_address.id
+      transaction = Repo.get_by(Transaction, hash: "pepino")
+      address = Repo.get_by(Address, hash: "0x7a33b7d")
+      assert Repo.get_by(ToAddress, %{transaction_id: transaction.id, address_id: address.id})
+    end
+
+    test "that it creates a 'from address'" do
+      block = insert(:block)
+      transaction_attrs = %{@raw_transaction | "from" => "0xSmurfsRool"}
+      Fetcher.create_transaction(block, transaction_attrs)
+      assert Repo.get_by(Address, hash: "0xsmurfsrool")
     end
   end
 
@@ -183,7 +201,7 @@ defmodule Explorer.FetcherTest do
       transaction = insert(:transaction)
       Fetcher.create_to_address(transaction, "0xFreshPrince")
       address = Address |> order_by(desc: :inserted_at) |> Repo.one
-      to_address = ToAddress |> order_by(desc: :inserted_at)  |> Repo.one
+      to_address = ToAddress |> order_by(desc: :inserted_at)|> Repo.one
       assert to_address.transaction_id == transaction.id
       assert to_address.address_id == address.id
     end
@@ -192,6 +210,30 @@ defmodule Explorer.FetcherTest do
       transaction = insert(:transaction)
       insert(:address, %{hash: "bigmouthbillybass"})
       Fetcher.create_to_address(transaction, "bigmouthbillybass")
+      assert Address |> Repo.all |> length == 1
+    end
+  end
+
+    describe "create_from_address/2" do
+    test "that it creates a new address when one does not exist" do
+      transaction = insert(:transaction)
+      Fetcher.create_from_address(transaction, "0xbb8")
+      last_address = Address |> order_by(desc: :inserted_at) |> Repo.one
+      assert last_address.hash == "0xbb8"
+    end
+
+    test "that it creates a relation for the transaction and 'from address'" do
+      block = insert(:block)
+      Fetcher.create_transaction(block, @raw_transaction)
+      transaction = Repo.get_by(Transaction, hash: "pepino")
+      address = Repo.get_by(Address, hash: "0x34d0ef2c")
+      assert Repo.get_by(FromAddress, %{transaction_id: transaction.id, address_id: address.id})
+    end
+
+    test "when the address already exists it doesn't insert a new address" do
+      transaction = insert(:transaction)
+      insert(:address, %{hash: "0xbb8"})
+      Fetcher.create_from_address(transaction, "0xbb8")
       assert Address |> Repo.all |> length == 1
     end
   end
