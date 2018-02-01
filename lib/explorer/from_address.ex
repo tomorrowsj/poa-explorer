@@ -11,7 +11,7 @@ defmodule Explorer.FromAddress do
   @primary_key false
   schema "from_addresses" do
     belongs_to :transaction, Explorer.Transaction, primary_key: true
-    belongs_to :address, Explorer.Address, primary_key: true
+    belongs_to :address, Explorer.Address
     timestamps()
   end
 

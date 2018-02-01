@@ -4,7 +4,7 @@ defmodule Explorer.Repo.Migrations.CreateFromAddresses do
   def change do
     create table(:from_addresses, primary_key: false) do
       add :transaction_id, references(:transactions), null: false, primary_key: true
-      add :address_id, references(:addresses), null: false, primary_key: true
+      add :address_id, references(:addresses), null: false
       timestamps null: false
     end
 

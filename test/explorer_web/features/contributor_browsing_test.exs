@@ -45,8 +45,10 @@ defmodule ExplorerWeb.UserListTest do
       timestamp: Timex.now |> Timex.shift(hours: -2),
       gas_used: 123987,
     })
+
     insert_list(4, :transaction, block: transaction_block)
-    insert(:transaction, %{
+
+    transaction = insert(:transaction, %{
       hash: "0xSk8",
       value: 5656,
       gas: 789000000000058745,
@@ -55,6 +57,11 @@ defmodule ExplorerWeb.UserListTest do
       nonce: 99045,
       block: transaction_block,
     })
+
+    to_address = insert(:address, hash: "0xabelincoln")
+    from_address = insert(:address, hash: "0xhowardtaft")
+    insert(:to_address, %{transaction: transaction, address: to_address})
+    insert(:from_address, %{transaction: transaction, address: from_address})
 
     session
     |> visit("/en")
@@ -72,5 +79,7 @@ defmodule ExplorerWeb.UserListTest do
     |> assert_has(css(".transaction-detail__item", text: "0x00012"))
     |> assert_has(css(".transaction-detail__item", text: "99045"))
     |> assert_has(css(".transaction-detail__item", text: "123987"))
+    |> assert_has(css(".transaction-detail__item", text: "0xabelincoln"))
+    |> assert_has(css(".transaction-detail__item", text: "0xhowardtaft"))
   end
 end
