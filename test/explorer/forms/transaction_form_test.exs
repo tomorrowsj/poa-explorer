@@ -2,38 +2,31 @@ defmodule Explorer.TransactionFormTest do
   use Explorer.DataCase
   alias Explorer.TransactionForm
 
-  setup _context do
-    date = "Feb-02-2010 10:48:56 AM Etc/UTC"
-    block = insert(:block, %{
-      number: 622,
-      gas_used: 99523,
-      timestamp: Timex.parse!(date, "%b-%d-%Y %H:%M:%S %p %Z", :strftime),
-    })
-    transaction = insert(:transaction, block: block)
-    to_address = insert(:address, hash: "0xsleepypuppy")
-    from_address = insert(:address, hash: "0xilovefrogs")
-    insert(:to_address, transaction: transaction, address: to_address)
-    insert(:from_address, transaction: transaction, address: from_address)
-    form = TransactionForm.build(transaction)
-    {:ok, %{form: form}}
-  end
-
   describe "build/1" do
+    setup _context do
+      insert(:block, %{number: 24})
+      date = "Feb-02-2010 10:48:56 AM Etc/UTC"
+      block = insert(:block, %{
+        number: 1,
+        gas_used: 99523,
+        timestamp: Timex.parse!(date, "%b-%d-%Y %H:%M:%S %p %Z", :strftime),
+      })
+      transaction = insert(:transaction, block: block) |> with_addresses(%{to: "0xsleepypuppy", from: "0xilovefrogs"})
+      form = TransactionForm.build(transaction)
+      {:ok, %{form: form}}
+    end
+
     test "that it has a block number", %{form: form} do
-      assert form.block_number == 622
+      assert form.block_number == 1
     end
 
     test "that it returns the block's age" do
       block = insert(:block, %{
-        number: 622,
+        number: 1,
         gas_used: 99523,
         timestamp: Timex.now |> Timex.shift(hours: -2),
       })
-      transaction = insert(:transaction, block: block)
-      to_address = insert(:address, hash: "0xsiskelnebert")
-      from_address = insert(:address, hash: "0xleonardmaltin")
-      insert(:to_address, transaction: transaction, address: to_address)
-      insert(:from_address, transaction: transaction, address: from_address)
+      transaction = insert(:transaction, block: block) |> with_addresses(%{to: "0xsiskelnebert", from: "0xleonardmaltin"})
       assert TransactionForm.build(transaction).age == "2 hours ago"
     end
 
@@ -51,6 +44,18 @@ defmodule Explorer.TransactionFormTest do
 
     test "that it returns a 'from address'", %{form: form} do
       assert form.from_address == "0xilovefrogs"
+    end
+
+    test "that it returns confirmations", %{form: form} do
+      assert form.confirmations == 23
+    end
+  end
+
+  describe "confirmations/1" do
+    test "when there is only one block" do
+      block = insert(:block, %{number: 1})
+      transaction = insert(:transaction, %{block: block})
+      assert TransactionForm.confirmations(transaction) == 0
     end
   end
 end

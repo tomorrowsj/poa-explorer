@@ -15,7 +15,14 @@
         <dl>
           <div class="transaction-detail__item">
             <dt><%= gettext "Block Number" %></dt>
-            <dd><%= @transaction.block_number %></dd>
+            <dd>
+              <span class="transaction-detail__item--primary">
+                <%= link(@transaction.block_number, to: block_path(@conn, :show, @conn.assigns.locale, @transaction.block_number)) %>
+              </span>
+              <span class="transaction-detail__item--secondary">
+                (<%= gettext "%{confirmations} block confirmations", confirmations: @transaction.confirmations %>)
+              </span>
+            </dd>
           </div>
           <div class="transaction-detail__item">
             <dt><%= gettext "Age" %></dt>
@@ -26,16 +33,16 @@
             <dd><%= @transaction.formatted_timestamp %></dd>
           </div>
           <div class="transaction-detail__item">
-            <dt><%= gettext "Value" %></dt>
-            <dd><%= @transaction.value %></dd>
+            <dt><%= gettext "From" %></dt>
+            <dd><%= @transaction.from_address %></dd>
           </div>
           <div class="transaction-detail__item">
             <dt><%= gettext "To" %></dt>
             <dd><%= @transaction.to_address %></dd>
           </div>
           <div class="transaction-detail__item">
-            <dt><%= gettext "From" %></dt>
-            <dd><%= @transaction.from_address %></dd>
+            <dt><%= gettext "Value" %></dt>
+            <dd><%= @transaction.value %></dd>
           </div>
         </dl>
       </div>
@@ -50,16 +57,16 @@
             <dd><%= @transaction.gas_price %></dd>
           </div>
           <div class="transaction-detail__item">
+            <dt><%= gettext "Cumulative Gas Used" %></dt>
+            <dd><%= @transaction.cumulative_gas_used %></dd>
+          </div>
+          <div class="transaction-detail__item">
             <dt><%= gettext "Nonce" %></dt>
             <dd><%= @transaction.nonce %></dd>
           </div>
           <div class="transaction-detail__item">
             <dt><%= gettext "Input" %></dt>
             <dd><%= @transaction.input %></dd>
-          </div>
-          <div class="transaction-detail__item">
-            <dt><%= gettext "Cumulative Gas Used" %></dt>
-            <dd><%= @transaction.cumulative_gas_used %></dd>
           </div>
         </dl>
       </div>

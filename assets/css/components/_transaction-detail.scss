@@ -37,6 +37,10 @@
       white-space: nowrap;
       overflow: hidden;
     }
+
+    &--secondary {
+      color: explorer-color("gray", "300");
+    }
   }
 }
 

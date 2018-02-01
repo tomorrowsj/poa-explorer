@@ -1,6 +1,7 @@
 defmodule Explorer.TransactionForm do
   @moduledoc false
   alias Explorer.Repo
+  alias Explorer.Block
   alias Explorer.Address
   alias Explorer.ToAddress
   alias Explorer.FromAddress
@@ -16,6 +17,7 @@ defmodule Explorer.TransactionForm do
       cumulative_gas_used: transaction |> cumulative_gas_used,
       to_address: transaction |> to_address,
       from_address: transaction |> from_address,
+      confirmations: transaction |> confirmations,
     })
   end
 
@@ -55,5 +57,10 @@ defmodule Explorer.TransactionForm do
       where: transaction.id == ^transaction.id
 
     Repo.one(query).hash
+  end
+
+  def confirmations(transaction) do
+    query = from block in Block, select: max(block.number)
+    Repo.one(query) - transaction.block.number
   end
 end
