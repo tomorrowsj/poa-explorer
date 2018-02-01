@@ -29,6 +29,14 @@
             <dt><%= gettext "Value" %></dt>
             <dd><%= @transaction.value %></dd>
           </div>
+          <div class="transaction-detail__item">
+            <dt><%= gettext "To" %></dt>
+            <dd><%= @transaction.to_address %></dd>
+          </div>
+          <div class="transaction-detail__item">
+            <dt><%= gettext "From" %></dt>
+            <dd><%= @transaction.from_address %></dd>
+          </div>
         </dl>
       </div>
       <div class="transaction-detail__column">

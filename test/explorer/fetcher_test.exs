@@ -214,7 +214,7 @@ defmodule Explorer.FetcherTest do
     end
   end
 
-    describe "create_from_address/2" do
+  describe "create_from_address/2" do
     test "that it creates a new address when one does not exist" do
       transaction = insert(:transaction)
       Fetcher.create_from_address(transaction, "0xbb8")

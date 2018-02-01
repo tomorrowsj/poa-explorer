@@ -3,7 +3,7 @@ defmodule ExplorerWeb.TransactionControllerTest do
 
   describe "GET show/3" do
     test "returns a transaction", %{conn: conn} do
-      insert(:transaction, id: 8)
+      insert(:transaction, id: 8) |> with_addresses
       conn = get(conn, "/en/transactions/8")
       assert conn.assigns.transaction.id == 8
     end

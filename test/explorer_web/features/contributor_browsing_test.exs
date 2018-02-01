@@ -17,8 +17,17 @@ defmodule ExplorerWeb.UserListTest do
 
   test "views blocks", %{session: session} do
     insert_list(4, :block, %{number: 1, timestamp: Timex.now |> Timex.shift(hours: -1), gas_used: 10})
-    fifth_block = insert(:block, %{number: 311, hash: "0xMrCoolBlock", timestamp: Timex.now |> Timex.shift(hours: -1), miner: "Heathcliff", size: 9999999, nonce: "once upon a nonce", gas_used: 1010101, gas_limit: 5030101})
-    insert_list(3, :transaction, block: fifth_block)
+    fifth_block = insert(:block, %{
+      number: 311,
+      hash: "0xMrCoolBlock",
+      timestamp: Timex.now |> Timex.shift(hours: -1),
+      miner: "Heathcliff",
+      size: 9999999,
+      nonce: "once upon a nonce",
+      gas_used: 1010101,
+      gas_limit: 5030101
+    })
+    for _ <- 0..2, do: insert(:transaction, %{block: fifth_block}) |> with_addresses
 
     session
     |> visit("/en")
@@ -41,27 +50,19 @@ defmodule ExplorerWeb.UserListTest do
   end
 
   test "views transactions", %{session: session} do
-    transaction_block = insert(:block, %{
-      timestamp: Timex.now |> Timex.shift(hours: -2),
-      gas_used: 123987,
-    })
+    block = insert(:block, %{timestamp: Timex.now |> Timex.shift(hours: -2), gas_used: 123987})
+    for _ <- 0..3, do: insert(:transaction, %{block: block}) |> with_addresses
 
-    insert_list(4, :transaction, block: transaction_block)
-
-    transaction = insert(:transaction, %{
+    insert(:transaction, %{
       hash: "0xSk8",
       value: 5656,
       gas: 789000000000058745,
       gas_price: 7890000000898912300045,
       input: "0x00012",
       nonce: 99045,
-      block: transaction_block,
+      block: block,
     })
-
-    to_address = insert(:address, hash: "0xabelincoln")
-    from_address = insert(:address, hash: "0xhowardtaft")
-    insert(:to_address, %{transaction: transaction, address: to_address})
-    insert(:from_address, %{transaction: transaction, address: from_address})
+    |> with_addresses(%{to: "0xabelincoln", from: "0xhowardtaft"})
 
     session
     |> visit("/en")

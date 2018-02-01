@@ -38,11 +38,7 @@ defmodule ExplorerWeb.PageControllerTest do
 
     test "returns a transaction", %{conn: conn} do
       block = insert(:block, number: 33)
-      transaction = insert(:transaction, hash: "0xDECAFBAD", block: block)
-      to_address = insert(:address, hash: "0xsleepypuppy")
-      from_address = insert(:address, hash: "0xilovefrogs")
-      insert(:to_address, transaction: transaction, address: to_address)
-      insert(:from_address, transaction: transaction, address: from_address)
+      insert(:transaction, hash: "0xDECAFBAD", block: block) |> with_addresses(%{to: "0xsleepypuppy", from: "0xilovefrogs"})
 
       conn = get conn, "/en"
 
@@ -52,16 +48,10 @@ defmodule ExplorerWeb.PageControllerTest do
 
     test "returns only the five most recent transactions", %{conn: conn} do
       block_mined_today = insert(:block, timestamp: Timex.now |> Timex.shift(hours: -1))
-      insert(:transaction, hash: "0xStuff", inserted_at: Timex.now |> Timex.shift(hours: -1), block: block_mined_today)
+      insert(:transaction, hash: "0xStuff", inserted_at: Timex.now |> Timex.shift(hours: -1), block: block_mined_today) |> with_addresses
 
       block_mined_last_week = insert(:block, timestamp: Timex.now |> Timex.shift(weeks: -1))
-      build_transaction(block_mined_last_week)
-      build_transaction(block_mined_last_week)
-      build_transaction(block_mined_last_week)
-      build_transaction(block_mined_last_week)
-      build_transaction(block_mined_last_week)
-
-      # IO.inspect(Explorer.Repo.all(Explorer.Address))
+      for _ <- 0..4, do: insert(:transaction, %{block: block_mined_last_week}) |> with_addresses
 
       conn = get conn, "/en"
 

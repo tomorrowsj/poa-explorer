@@ -36,11 +36,11 @@ defmodule Explorer.TransactionForm do
   end
 
   def to_address(transaction) do
-    IO.inspect(transaction)
-
     query = from address in Address,
-      join: to_address in ToAddress, where: to_address.address_id == address.id,
-      join: transaction in Transaction, where: transaction.id == to_address.transaction_id,
+      join: to_address in ToAddress,
+        where: to_address.address_id == address.id,
+      join: transaction in Transaction,
+        where: transaction.id == to_address.transaction_id,
       where: transaction.id == ^transaction.id
 
     Repo.one(query).hash
@@ -48,8 +48,10 @@ defmodule Explorer.TransactionForm do
 
   def from_address(transaction) do
     query = from address in Address,
-      join: from_address in FromAddress, where: from_address.address_id == address.id,
-      join: transaction in Transaction, where: transaction.id == from_address.transaction_id,
+      join: from_address in FromAddress,
+        where: from_address.address_id == address.id,
+      join: transaction in Transaction,
+        where: transaction.id == from_address.transaction_id,
       where: transaction.id == ^transaction.id
 
     Repo.one(query).hash
