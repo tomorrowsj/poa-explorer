@@ -3,7 +3,7 @@ defmodule ExplorerWeb.ChainControllerTest do
 
   def build_transaction(block \\ nil) do
     block = block || insert(:block)
-    transaction = insert(:transaction, block: block)
+    transaction = insert(:transaction) |> with_block(block)
     to_address = insert(:address)
     from_address = insert(:address)
     insert(:to_address, transaction: transaction, address: to_address)
@@ -39,20 +39,20 @@ defmodule ExplorerWeb.ChainControllerTest do
 
     test "returns a transaction", %{conn: conn} do
       block = insert(:block, number: 33)
-      insert(:transaction, hash: "0xDECAFBAD", block: block) |> with_addresses(%{to: "0xsleepypuppy", from: "0xilovefrogs"})
+      insert(:transaction, hash: "0xDECAFBAD") |> with_block(block) |> with_addresses(%{to: "0xsleepypuppy", from: "0xilovefrogs"})
 
       conn = get conn, "/en"
 
       assert(List.first(conn.assigns.transactions).hash == "0xDECAFBAD")
-      assert(List.first(conn.assigns.transactions).block.number == 33)
+      assert(List.first(conn.assigns.transactions).block_number == 33)
     end
 
     test "returns only the five most recent transactions", %{conn: conn} do
-      block_mined_today = insert(:block, number: 2)
-      insert(:transaction, hash: "0xStuff", block: block_mined_today) |> with_addresses
+      block_mined_today = insert(:block, timestamp: Timex.now |> Timex.shift(hours: -1))
+      insert(:transaction, hash: "0xStuff", inserted_at: Timex.now |> Timex.shift(hours: -1)) |> with_block(block_mined_today) |> with_addresses
 
-      block_mined_last_week = insert(:block, number: 1)
-      for _ <- 0..4, do: insert(:transaction, %{block: block_mined_last_week}) |> with_addresses
+      block_mined_last_week = insert(:block, timestamp: Timex.now |> Timex.shift(weeks: -1))
+      for _ <- 0..4, do: insert(:transaction) |> with_block(block_mined_last_week) |> with_addresses
 
       conn = get conn, "/en"
 
