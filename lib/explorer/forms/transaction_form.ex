@@ -1,5 +1,5 @@
 defmodule Explorer.TransactionForm do
-  @moduledoc false
+  alias Cldr.Number
   alias Explorer.Address
   alias Explorer.Block
   alias Explorer.BlockTransaction
@@ -8,6 +8,8 @@ defmodule Explorer.TransactionForm do
   alias Explorer.ToAddress
   alias Explorer.Transaction
   import Ecto.Query
+
+  @moduledoc "Format a Block and a Transaction for display."
 
   def build(transaction) do
     block = with_block(transaction)
@@ -48,7 +50,7 @@ defmodule Explorer.TransactionForm do
   end
 
   def cumulative_gas_used(block) do
-    block && block.gas_used |> Cldr.Number.to_string! || ""
+    block && block.gas_used |> Number.to_string! || ""
   end
 
   def to_address(transaction) do

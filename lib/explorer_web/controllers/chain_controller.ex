@@ -23,7 +23,10 @@ defmodule ExplorerWeb.ChainController do
       limit: 5,
       order_by: block.number
 
-    transactions = Repo.all(transaction_query) |> Enum.map(&TransactionForm.build/1)
+    transactions =
+      transaction_query
+      |> Repo.all
+      |> Enum.map(&TransactionForm.build/1)
     render(conn, "show.html", blocks: blocks, transactions: transactions)
   end
 end

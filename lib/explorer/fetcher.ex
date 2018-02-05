@@ -62,7 +62,9 @@ defmodule Explorer.Fetcher  do
 
   def create_block_transaction(transaction, block) do
     if block do
-      block_transaction = Repo.get_by(BlockTransaction, transaction_id: transaction.id) || %BlockTransaction{}
+      block_transaction =
+        Repo.get_by(BlockTransaction, transaction_id: transaction.id) ||
+          %BlockTransaction{}
 
       changes = %{block_id: block.id, transaction_id: transaction.id}
 
