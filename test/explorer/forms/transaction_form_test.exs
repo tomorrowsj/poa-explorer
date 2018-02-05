@@ -54,7 +54,7 @@ defmodule Explorer.TransactionFormTest do
     end
 
     test "that it returns the cumulative gas used for validating the block", %{form: form} do
-      assert form.cumulative_gas_used == 99523
+      assert form.cumulative_gas_used == "99,523"
     end
 
     test "shows the cumulative gas used for a pending transaction" do
@@ -77,6 +77,17 @@ defmodule Explorer.TransactionFormTest do
     test "shows confirmations when the transaction is pending" do
       transaction = insert(:transaction) |> with_addresses
       assert TransactionForm.build(transaction).confirmations == 0
+    end
+  end
+
+  describe "cumulative_gas_used/1" do
+    test "when there is a block" do
+      block = insert(:block, %{gas_used: 1_000})
+      assert TransactionForm.cumulative_gas_used(block) == "1,000"
+    end
+
+    test "when there is not a block" do
+      assert TransactionForm.cumulative_gas_used(nil) == ""
     end
   end
 

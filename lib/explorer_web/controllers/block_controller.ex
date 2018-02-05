@@ -6,10 +6,13 @@ defmodule ExplorerWeb.BlockController do
   alias Explorer.BlockForm
 
   def index(conn, params) do
-    blocks = Block
-      |> order_by(desc: :number)
-      |> preload(:transactions)
-      |> Repo.paginate(params)
+    query = from block in Block,
+      left_join: block_transaction in assoc(block, :block_transactions),
+      left_join: transactions in assoc(block_transaction, :transaction),
+      preload: [transactions: transactions]
+
+    blocks = query |> Block.latest |> Repo.paginate(params)
+
     render(conn, "index.html", blocks: blocks)
   end
 

@@ -48,7 +48,7 @@ defmodule Explorer.TransactionForm do
   end
 
   def cumulative_gas_used(block) do
-    block && block.gas_used || ""
+    block && block.gas_used |> Cldr.Number.to_string! || ""
   end
 
   def to_address(transaction) do

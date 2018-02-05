@@ -1,15 +1,18 @@
 defmodule Explorer.Block do
-  @moduledoc false
   alias Explorer.Block
   alias Explorer.BlockTransaction
   import Ecto.Changeset
   use Ecto.Schema
+  import Ecto.Query
+
+  @moduledoc false
 
   @timestamps_opts [type: Timex.Ecto.DateTime,
                     autogenerate: {Timex.Ecto.DateTime, :autogenerate, []}]
 
   schema "blocks" do
-    has_one :block_transaction, BlockTransaction
+    has_many :block_transactions, BlockTransaction
+    has_many :transactions, through: [:block_transactions, :transaction]
     field :number, :integer
     field :hash, :string
     field :parent_hash, :string
