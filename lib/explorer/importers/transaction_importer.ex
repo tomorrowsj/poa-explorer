@@ -13,7 +13,6 @@ defmodule Explorer.TransactionImporter do
 
   def import(hash) do
     raw_transaction = download_transaction(hash)
-    block_hash = raw_transaction["blockHash"]
     changes = extract_attrs(raw_transaction)
 
     transaction = Repo.get_by(Transaction, hash: changes.hash) || %Transaction{}
@@ -22,7 +21,7 @@ defmodule Explorer.TransactionImporter do
     |> Repo.insert_or_update!
     |> create_from_address(raw_transaction["from"])
     |> create_to_address(raw_transaction["to"] || raw_transaction["creates"])
-    |> create_block_transaction(block_hash)
+    |> create_block_transaction(raw_transaction["blockHash"])
   end
 
   def download_transaction(hash) do
