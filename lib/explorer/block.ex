@@ -13,7 +13,7 @@ defmodule Explorer.Block do
     field :number, :integer
     field :hash, :string
     field :parent_hash, :string
-    field :nonce, :string
+    field :nonce, :string, default: "0"
     field :miner, :string
     field :difficulty, :decimal
     field :total_difficulty, :decimal
