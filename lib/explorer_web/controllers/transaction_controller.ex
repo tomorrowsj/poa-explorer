@@ -9,11 +9,10 @@ defmodule ExplorerWeb.TransactionController do
 
   def index(conn, params) do
     query = from transaction in Transaction,
-      join: block_transaction in assoc(transaction, :block_transaction),
-      join: block in assoc(block_transaction, :block),
-      preload: [
-        block: block,
-      ],
+      join: block in assoc(transaction, :block),
+      join: to_address in assoc(transaction, :to_address),
+      join: from_address in assoc(transaction, :from_address),
+      preload: [block: block, to_address: to_address, from_address: from_address],
       order_by: [desc: block.timestamp]
 
     transactions = Repo.paginate(query, params)
@@ -24,17 +23,10 @@ defmodule ExplorerWeb.TransactionController do
   def show(conn, params) do
     hash = String.downcase(params["id"])
     query = from transaction in Transaction,
-      left_join: block_transaction in assoc(transaction, :block_transaction),
-      left_join: block in assoc(block_transaction, :block),
-      left_join: to_address_join in assoc(transaction, :to_address_join),
-      left_join: to_address in assoc(to_address_join, :address),
-      left_join: from_address_join in assoc(transaction, :from_address_join),
-      left_join: from_address in assoc(from_address_join, :address),
-      preload: [
-        block: block,
-        to_address: to_address,
-        from_address: from_address
-      ],
+      join: block in assoc(transaction, :block),
+      join: to_address in assoc(transaction, :to_address),
+      join: from_address in assoc(transaction, :from_address),
+      preload: [block: block, to_address: to_address, from_address: from_address],
       where: fragment("lower(?)", transaction.hash) == ^hash,
       limit: 1
 
