@@ -49,10 +49,6 @@ defmodule Explorer.TransactionImporter do
     payload
   end
 
-  def download_internal_transaction() do
-    OurCoolLib.get_txn()
-  end
-
   def extract_attrs(raw_transaction) do
     %{
       hash: raw_transaction["hash"],
