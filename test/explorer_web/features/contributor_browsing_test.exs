@@ -132,6 +132,9 @@ defmodule ExplorerWeb.UserListTest do
     |> assert_has(css(".transaction__item", text: "48 years ago"))
     |> assert_has(css(".transaction__item", text: "38 years ago"))
 
+    |> click(link("Internal Transactions"))
+
+    |> visit("/en/transactions/0xSk8")
     |> click(link("Logs"))
     |> assert_has(css(".transaction-log__link", text: "0xlincoln"))
 
