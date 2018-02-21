@@ -7,5 +7,4 @@ defmodule Explorer.EthereumexExtensions do
     params = [hash, ["trace"]]
     HttpClient.request("trace_replayTransaction", params, [])
   end
-
 end
