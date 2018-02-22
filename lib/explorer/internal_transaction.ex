@@ -24,16 +24,15 @@ defmodule Explorer.InternalTransaction do
     timestamps()
   end
 
-  @required_attrs ~w(index call_type trace_address value gas gas_used input output)a
-  @optional_attrs ~w()a
+  @required_attrs ~w(index call_type trace_address value gas gas_used input
+    output transaction_id)a
 
   def changeset(%InternalTransaction{} = internal_transaction, attrs \\ %{}) do
     internal_transaction
-    |> cast(attrs, @required_attrs, @optional_attrs)
+    |> cast(attrs, @required_attrs)
     |> validate_required(@required_attrs)
     |> foreign_key_constraint(:transaction_id)
   end
 
   def null, do: %InternalTransaction{}
-
 end
