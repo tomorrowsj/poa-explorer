@@ -91,6 +91,7 @@ defmodule Explorer.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:quantum, "~> 2.2.1"},
       {:react_phoenix, "~> 0.5"},
+      {:scout_apm, "~> 0.0"},
       {:scrivener_ecto, "~> 1.0"},
       {:scrivener_html, "~> 1.7"},
       # Waiting on https://github.com/smeevil/set_locale/pull/9

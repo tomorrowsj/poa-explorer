@@ -87,3 +87,7 @@ config :exq,
     {"receipts", String.to_integer(System.get_env("EXQ_RECEIPTS_CONCURRENCY") || "1")},
     {"transactions", String.to_integer(System.get_env("EXQ_TRANSACTIONS_CONCURRENCY") || "1")}
   ]
+
+import_config "scout_apm.exs"
+
+config :explorer, Explorer.Repo, loggers: [{ScoutApm.Instruments.EctoLogger, :log, []}]

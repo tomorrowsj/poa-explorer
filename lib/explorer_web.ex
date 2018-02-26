@@ -20,6 +20,7 @@ defmodule ExplorerWeb do
   def controller do
     quote do
       use Phoenix.Controller, namespace: ExplorerWeb
+      use ScoutApm.Instrumentation
       import Plug.Conn
       import ExplorerWeb.Router.Helpers
       import ExplorerWeb.Gettext
