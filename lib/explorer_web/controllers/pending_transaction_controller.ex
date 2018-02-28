@@ -14,11 +14,7 @@ defmodule ExplorerWeb.PendingTransactionController do
         inner_join: to_address in assoc(transaction, :to_address),
         inner_join: from_address in assoc(transaction, :from_address),
         preload: [to_address: to_address, from_address: from_address],
-        where:
-          fragment(
-            "NOT EXISTS (SELECT true FROM receipts WHERE receipts.transaction_id = ?)",
-            transaction.id
-          ),
+        where: is_nil(transaction.receipt_id),
         where: transaction.id < ^last_seen,
         order_by: [desc: transaction.id],
         limit: 10
@@ -27,11 +23,7 @@ defmodule ExplorerWeb.PendingTransactionController do
     total_query =
       from(
         transaction in Transaction,
-        where:
-          fragment(
-            "NOT EXISTS (SELECT true FROM receipts WHERE receipts.transaction_id = ?)",
-            transaction.id
-          ),
+        where: is_nil(transaction.receipt_id),
         order_by: [desc: transaction.id],
         limit: 1
       )
@@ -61,11 +53,7 @@ defmodule ExplorerWeb.PendingTransactionController do
       from(
         transaction in Transaction,
         select: transaction.id,
-        where:
-          fragment(
-            "NOT EXISTS (SELECT true FROM receipts WHERE receipts.transaction_id = ?)",
-            transaction.id
-          ),
+        where: is_nil(transaction.receipt_id),
         order_by: [desc: transaction.id],
         limit: 1
       )

@@ -8,10 +8,10 @@ defmodule Explorer.Receipt do
   alias Explorer.Receipt
 
   @required_attrs ~w(cumulative_gas_used gas_used status index)a
-  @optional_attrs ~w(transaction_id)a
+  @optional_attrs ~w()a
 
   schema "receipts" do
-    belongs_to(:transaction, Transaction)
+    has_one(:transaction, Transaction)
     has_many(:logs, Log)
     field(:cumulative_gas_used, :decimal)
     field(:gas_used, :decimal)
@@ -27,8 +27,6 @@ defmodule Explorer.Receipt do
     |> cast_assoc(:transaction)
     |> cast_assoc(:logs)
     |> validate_required(@required_attrs)
-    |> foreign_key_constraint(:transaction_id)
-    |> unique_constraint(:transaction_id)
   end
 
   def null, do: %Receipt{}

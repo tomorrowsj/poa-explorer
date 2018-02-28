@@ -19,7 +19,7 @@ defmodule Explorer.ReceiptImporterTest do
         )
 
         receipt = Receipt |> preload([:transaction]) |> Repo.one()
-        assert receipt.transaction == transaction
+        assert receipt.transaction.id == transaction.id
       end
     end
 

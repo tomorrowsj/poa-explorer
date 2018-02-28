@@ -120,6 +120,8 @@ defmodule ExplorerWeb.UserListTest do
     lincoln = insert(:address, hash: "0xlincoln")
     taft = insert(:address, hash: "0xhowardtaft")
 
+    receipt = insert(:receipt, status: 1)
+
     transaction =
       insert(
         :transaction,
@@ -132,12 +134,12 @@ defmodule ExplorerWeb.UserListTest do
         inserted_at: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
         updated_at: Timex.parse!("1980-01-01T00:00:18-00:00", "{ISO:Extended}"),
         from_address_id: taft.id,
-        to_address_id: lincoln.id
+        to_address_id: lincoln.id,
+        receipt_id: receipt.id
       )
 
     insert(:block_transaction, block: block, transaction: transaction)
 
-    receipt = insert(:receipt, transaction: transaction, status: 1)
     insert(:log, address: lincoln, receipt: receipt)
 
     # From Lincoln to Taft.

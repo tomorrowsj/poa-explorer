@@ -10,7 +10,7 @@ defmodule Explorer.Transaction do
   alias Explorer.Transaction
 
   schema "transactions" do
-    has_one(:receipt, Receipt)
+    belongs_to(:receipt, Receipt)
     has_one(:block_transaction, BlockTransaction)
     has_one(:block, through: [:block_transaction, :block])
     belongs_to(:from_address, Address)
@@ -34,7 +34,7 @@ defmodule Explorer.Transaction do
   @required_attrs ~w(hash value gas gas_price input nonce public_key r s
     standard_v transaction_index v)a
 
-  @optional_attrs ~w(to_address_id from_address_id)a
+  @optional_attrs ~w(to_address_id from_address_id receipt_id)a
 
   @doc false
   def changeset(%Transaction{} = transaction, attrs \\ %{}) do
@@ -42,6 +42,7 @@ defmodule Explorer.Transaction do
     |> cast(attrs, @required_attrs ++ @optional_attrs)
     |> validate_required(@required_attrs)
     |> foreign_key_constraint(:block_id)
+    |> foreign_key_constraint(:receipt_id)
     |> update_change(:hash, &String.downcase/1)
     |> unique_constraint(:hash)
   end

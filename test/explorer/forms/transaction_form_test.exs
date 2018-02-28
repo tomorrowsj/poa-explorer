@@ -18,17 +18,18 @@ defmodule Explorer.TransactionFormTest do
       to_address = insert(:address, hash: "0xsleepypuppy")
       from_address = insert(:address, hash: "0xilovefrogs")
 
+      receipt = insert(:receipt, status: 1)
+
       transaction =
         insert(
           :transaction,
           inserted_at: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
           updated_at: Timex.parse!("1980-01-01T00:00:18-00:00", "{ISO:Extended}"),
           to_address_id: to_address.id,
-          from_address_id: from_address.id
+          from_address_id: from_address.id,
+          receipt_id: receipt.id
         )
         |> with_block(block)
-
-      insert(:receipt, status: 1, transaction: transaction)
 
       form =
         transaction |> Repo.preload([:block, :to_address, :from_address, :receipt])
@@ -68,6 +69,8 @@ defmodule Explorer.TransactionFormTest do
       to_address = insert(:address, hash: "0xsleepypuppy")
       from_address = insert(:address, hash: "0xilovefrogs")
 
+      receipt = insert(:receipt, status: 0, gas_used: 100)
+
       transaction =
         insert(
           :transaction,
@@ -75,11 +78,10 @@ defmodule Explorer.TransactionFormTest do
           inserted_at: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
           updated_at: Timex.parse!("1980-01-01T00:00:18-00:00", "{ISO:Extended}"),
           to_address_id: to_address.id,
-          from_address_id: from_address.id
+          from_address_id: from_address.id,
+          receipt_id: receipt.id
         )
         |> with_block(block)
-
-      insert(:receipt, status: 0, gas_used: 100, transaction: transaction)
 
       form =
         transaction |> Repo.preload([:block, :to_address, :from_address, :receipt])
@@ -119,6 +121,8 @@ defmodule Explorer.TransactionFormTest do
       to_address = insert(:address, hash: "0xsleepypuppy")
       from_address = insert(:address, hash: "0xilovefrogs")
 
+      receipt = insert(:receipt, status: 0, gas_used: 555)
+
       transaction =
         insert(
           :transaction,
@@ -126,11 +130,10 @@ defmodule Explorer.TransactionFormTest do
           inserted_at: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
           updated_at: Timex.parse!("1980-01-01T00:00:18-00:00", "{ISO:Extended}"),
           to_address_id: to_address.id,
-          from_address_id: from_address.id
+          from_address_id: from_address.id,
+          receipt_id: receipt.id
         )
         |> with_block(block)
-
-      insert(:receipt, status: 0, gas_used: 555, transaction: transaction)
 
       form =
         transaction |> Repo.preload([:block, :to_address, :from_address, :receipt])
@@ -280,17 +283,18 @@ defmodule Explorer.TransactionFormTest do
           timestamp: time
         })
 
+      receipt = insert(:receipt, status: 0, gas_used: 555)
+
       transaction =
         insert(
           :transaction,
           hash: "0xkittenpower",
           inserted_at: Timex.parse!("1970-01-01T00:00:18-00:00", "{ISO:Extended}"),
           updated_at: Timex.parse!("1980-01-01T00:00:18-00:00", "{ISO:Extended}"),
-          gas: 555
+          gas: 555,
+          receipt_id: receipt.id
         )
         |> with_block(block)
-
-      insert(:receipt, status: 0, gas_used: 555, transaction: transaction)
 
       form =
         transaction |> Repo.preload([:block, :to_address, :from_address, :receipt])

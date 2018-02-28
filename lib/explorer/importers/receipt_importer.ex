@@ -1,6 +1,7 @@
 defmodule Explorer.ReceiptImporter do
   @moduledoc "Imports a transaction receipt given a transaction hash."
 
+  alias Ecto.Multi
   import Ecto.Query
   import Ethereumex.HttpClient, only: [eth_get_transaction_receipt: 1]
 
@@ -12,11 +13,17 @@ defmodule Explorer.ReceiptImporter do
   def import(hash) do
     transaction = hash |> find_transaction()
 
-    hash
-    |> download_receipt()
-    |> extract_receipt()
-    |> Map.put(:transaction_id, transaction.id)
-    |> save_receipt()
+    Multi.new()
+    |> Multi.run(:receipt, fn _ ->
+      hash
+      |> download_receipt()
+      |> extract_receipt()
+      |> save_receipt()
+    end)
+    |> Multi.run(:transaction, fn %{receipt: receipt} ->
+      Repo.update(Transaction.changeset(transaction, %{receipt_id: receipt.id}))
+    end)
+    |> Repo.transaction()
   end
 
   @dialyzer {:nowarn_function, download_receipt: 1}
@@ -29,9 +36,8 @@ defmodule Explorer.ReceiptImporter do
     query =
       from(
         transaction in Transaction,
-        left_join: receipt in assoc(transaction, :receipt),
         where: fragment("lower(?)", transaction.hash) == ^hash,
-        where: is_nil(receipt.id),
+        where: is_nil(transaction.receipt_id),
         limit: 1
       )
 
@@ -39,11 +45,9 @@ defmodule Explorer.ReceiptImporter do
   end
 
   defp save_receipt(receipt) do
-    unless is_nil(receipt.transaction_id) do
-      %Receipt{}
-      |> Receipt.changeset(receipt)
-      |> Repo.insert()
-    end
+    %Receipt{}
+    |> Receipt.changeset(receipt)
+    |> Repo.insert()
   end
 
   defp extract_receipt(receipt) do
