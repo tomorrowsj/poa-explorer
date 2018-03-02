@@ -9,21 +9,18 @@ defmodule ExplorerWeb.AddressTransactionFromController do
   alias Explorer.Repo.NewRelic, as: Repo
   alias Explorer.Transaction
   alias Explorer.Transaction.Service.Query
-  alias Explorer.TransactionForm
 
-  def index(conn, %{"address_id" => address_id} = params) do
-    address = Address.by_hash(address_id)
+  def index(conn, %{"address_id" => address_hash}) do
+    address = Address.by_hash(address_hash)
 
     query =
       Transaction
       |> Query.from_address(address.id)
       |> Query.include_addresses()
-      |> Query.require_receipt()
+      |> Query.include_receipt()
       |> Query.require_block()
       |> Query.chron()
 
-    page = Repo.paginate(query, params)
-    entries = Enum.map(page.entries, &TransactionForm.build_and_merge/1)
-    render(conn, "index.html", transactions: Map.put(page, :entries, entries))
+    render(conn, "index.html", transactions: query |> Repo.all(), address_hash: address_hash)
   end
 end

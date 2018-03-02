@@ -30,8 +30,8 @@ defmodule Explorer.Application do
 
     children() ++
       [
-        supervisor(Exq, [exq_options]),
-        worker(Explorer.Servers.ChainStatistics, [])
+        supervisor(Exq, [exq_options])
+        # worker(Explorer.Servers.ChainStatistics, [])
       ]
   end
 

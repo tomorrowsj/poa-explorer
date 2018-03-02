@@ -8,7 +8,6 @@ defmodule Explorer.Address.Service do
   def by_hash(hash) do
     Address
     |> Query.by_hash(hash)
-    |> Query.include_credit_and_debit()
     |> Repo.one()
   end
 

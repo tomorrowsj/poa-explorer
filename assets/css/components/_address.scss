@@ -25,11 +25,6 @@
   }
 
   &__link { color: explorer-color("blue", "500"); }
-
-  &__pagination {
-    margin: explorer-size(-1) 0 explorer-size(-2) 0;
-    .pagination { text-align: right; }
-  }
 }
 
 @media (min-width: $explorer-breakpoint-md) {
@@ -40,8 +35,5 @@
       justify-content: center;
     }
     &__headline-title { flex: 1; }
-    &__pagination {
-      margin: explorer-size(-1) 0 explorer-size(-2) 0;
-    }
   }
 }
