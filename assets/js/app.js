@@ -21,3 +21,6 @@ import './lib/react_phoenix'
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+import Balance from "./components/balance"
+
+window.balance = Balance;

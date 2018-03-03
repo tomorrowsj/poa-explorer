@@ -64,6 +64,7 @@ defmodule Explorer.Mixfile do
   defp deps do
     [
       {:cowboy, "~> 1.0"},
+      {:cors_plug, "~> 1.5"},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:crontab, "~> 1.1"},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},

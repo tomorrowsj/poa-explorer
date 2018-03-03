@@ -7,15 +7,15 @@ defmodule ExplorerWeb.Router do
     plug(:fetch_flash)
     plug(:protect_from_forgery)
 
-    plug(:put_secure_browser_headers, %{
-      "content-security-policy" => "\
-        default-src 'self';\
-        script-src 'self' 'unsafe-inline' 'unsafe-eval';\
-        style-src 'self' 'unsafe-inline' 'unsafe-eval';\
-        img-src 'self' 'unsafe-inline' 'unsafe-eval' data:;\
-        font-src 'self' 'unsafe-inline' 'unsafe-eval' data:;\
-      "
-    })
+    # plug(:put_secure_browser_headers, %{
+    #   "content-security-policy" => "\
+    #     default-src 'self';\
+    #     script-src 'self' 'unsafe-inline' 'unsafe-eval';\
+    #     style-src 'self' 'unsafe-inline' 'unsafe-eval';\
+    #     img-src 'self' 'unsafe-inline' 'unsafe-eval' data:;\
+    #     font-src 'self' 'unsafe-inline' 'unsafe-eval' data:;\
+    #   "
+    # })
   end
 
   pipeline :set_locale do

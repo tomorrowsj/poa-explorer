@@ -5,6 +5,7 @@ defmodule ExplorerWeb.AddressController do
 
   def show(conn, %{"id" => id}) do
     address = id |> Address.by_hash()
-    render(conn, "show.html", address: address)
+    parity_host = Application.get_env(:ethereumex, :url)
+    render(conn, "show.html", address: address, parity_host: parity_host)
   end
 end
