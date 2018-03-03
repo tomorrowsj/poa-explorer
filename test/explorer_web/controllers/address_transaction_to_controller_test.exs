@@ -31,6 +31,16 @@ defmodule ExplorerWeb.AddressTransactionToControllerTest do
       assert length(conn.assigns.transactions) == 1
     end
 
+    test "returns transactions to this address that do not have a block", %{conn: conn} do
+      address = insert(:address)
+      insert(:transaction, to_address_id: address.id)
+
+      conn =
+        get(conn, address_transaction_to_path(ExplorerWeb.Endpoint, :index, :en, address.hash))
+
+      assert length(conn.assigns.transactions) == 1
+    end
+
     test "does not return transactions from this address", %{conn: conn} do
       address = insert(:address)
       other_address = insert(:address)
@@ -45,5 +55,6 @@ defmodule ExplorerWeb.AddressTransactionToControllerTest do
     end
 
     test "returns a page with ten transactions", %{conn: conn} do
+    end
   end
 end
