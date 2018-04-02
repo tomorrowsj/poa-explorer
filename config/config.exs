@@ -24,7 +24,15 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :ethereumex, url: "http://localhost:8545"
+# config :ethereumex, url: "https://sokol-trace.poa.network"
+
+config :explorer, :eth_client,
+  url: "https://sokol.poa.network",
+  http: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
+
+config :ethereumex,
+  url: "https://sokol.poa.network",
+  http_options: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
 
 config :new_relixir, active: false
 

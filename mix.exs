@@ -75,7 +75,7 @@ defmodule Explorer.Mixfile do
       {:exq, "~> 0.9.1"},
       {:exq_ui, "~> 0.9.0"},
       {:exvcr, "~> 0.10", only: :test},
-      {:flow, "~> 0.12"},
+      {:flow, "~> 0.13"},
       {:gettext, "~> 0.11"},
       {:httpoison, "~> 1.0", override: true},
       {:junit_formatter, ">= 0.0.0", only: [:test], runtime: false},
@@ -89,7 +89,7 @@ defmodule Explorer.Mixfile do
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_pubsub_redis, "~> 2.1.0", only: [:prod]},
       {:postgrex, ">= 0.0.0"},
-      {:quantum, "~> 2.2.1"},
+      {:quantum, "~> 2.2.7"},
       {:react_phoenix, "~> 0.5"},
       {:scrivener_ecto, "~> 1.0"},
       {:scrivener_html, "~> 1.7"},
@@ -98,7 +98,8 @@ defmodule Explorer.Mixfile do
       {:sobelow, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:timex, "~> 3.1.24"},
       {:timex_ecto, "~> 3.2.1"},
-      {:wallaby, "~> 0.19.2", only: [:test], runtime: false}
+      {:wallaby, "~> 0.19.2", only: [:test], runtime: false},
+      {:jiffy, "~> 0.15"}
     ]
   end
 

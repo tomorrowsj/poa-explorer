@@ -49,6 +49,7 @@ config :explorer, ExplorerWeb.Endpoint,
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
+config :logger, level: :debug
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
@@ -59,7 +60,8 @@ config :explorer, Explorer.Repo,
   adapter: Ecto.Adapters.Postgres,
   database: "explorer_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 20,
+  loggers: []
 
 # Configure Quantum
 config :explorer, Explorer.Scheduler,
