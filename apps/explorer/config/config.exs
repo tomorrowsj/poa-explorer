@@ -5,10 +5,14 @@
 # is restricted to this project.
 use Mix.Config
 
-config :ethereumex, url: "http://localhost:8545"
+config :ethereumex,
+       url: "https://sokol.poa.network",
+       http_options: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
 
 # General application configuration
 config :explorer, ecto_repos: [Explorer.Repo]
+
+config :explorer, :eth_client, url: "https://sokol.poa.network", http: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
 
 config :explorer, :ethereum, backend: Explorer.Ethereum.Live
 
