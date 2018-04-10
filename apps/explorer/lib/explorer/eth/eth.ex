@@ -9,9 +9,43 @@ defmodule Explorer.ETH do
   end
 
   @doc """
-  TODO
+  Creates a filter subscription that can be polled for retreiving new blocks.
   """
-  def fetch_blocks(block_start, block_end) do
+  def listen_for_new_blocks do
+    id = DateTime.utc_now() |> DateTime.to_unix()
+    request = build_request("eth_newBlockFilter", id)
+    json_rpc(request)
+  end
+
+
+  @doc """
+  Lists changes for a given filter subscription.
+  """
+  def check_for_updates(filter_id) do
+    request = build_request("eth_getFilterChanges", filter_id, filter_id)
+    json_rpc(request)
+  end
+
+  @doc """
+  Fetches blocks by block hashes.
+
+  Transaction data is included for each block.
+  """
+  def fetch_blocks_by_hash(block_hashes) do
+    batched_requests =
+      for block_hash <- block_hashes do
+        build_request("eth_getBlockByHash", block_hash, [block_hash, true])
+      end
+
+    json_rpc(batched_requests)
+  end
+
+  @doc """
+  Fetches blocks by block number range.
+
+  Transaction data is included for each block.
+  """
+  def fetch_blocks_by_range(block_start, block_end) do
     block_start
     |> build_batch_request(block_end)
     |> json_rpc()
@@ -19,12 +53,7 @@ defmodule Explorer.ETH do
   end
   defp build_batch_request(block_start, block_end) do
     for current <- block_start..block_end do
-      %{
-        "id" => current,
-        "jsonrpc" => "2.0",
-        "method" => "eth_getBlockByNumber",
-        "params" => [int_to_hash_string(current), false]
-      }
+      build_request("eth_getBlockByNumber", current, [int_to_hash_string(current), false])
     end
   end
   defp handle_batch_response({:ok, results}, block_start, block_end) do
@@ -62,6 +91,15 @@ defmodule Explorer.ETH do
   end
   defp handle_response(resp, _status) do
     {:error, resp}
+  end
+
+  defp build_request(method, id, params_list \\ []) do
+    %{
+      "id" => id,
+      "jsonrpc" => "2.0",
+      "method" => method,
+      "params" => List.wrap(params_list)
+    }
   end
 
   defp config(key) do
