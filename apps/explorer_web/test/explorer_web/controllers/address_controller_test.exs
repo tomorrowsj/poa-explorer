@@ -5,12 +5,14 @@ defmodule ExplorerWeb.AddressControllerTest do
   alias Explorer.Debit
 
   describe "GET show/3" do
-    test "returns an address", %{conn: conn} do
-      address = insert(:address, hash: "0x9")
+    test "redirects to addresses/:address_id/transactions", %{conn: conn} do
+      insert(:address, hash: "0x9")
       Credit.refresh()
       Debit.refresh()
+
       conn = get(conn, "/en/addresses/0x9")
-      assert conn.assigns.address.id == address.id
+
+      assert redirected_to(conn) =~ "/en/addresses/0x9/transactions"
     end
   end
 end

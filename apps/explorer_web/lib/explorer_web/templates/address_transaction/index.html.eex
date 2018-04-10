@@ -1,11 +1,21 @@
 <section class="container__section block">
-  <div class="address__headline">
-    <h1 class="address__headline-title"><%= gettext("Address %{number}", number: @conn.params["address_id"]) %></h1>
-    <div class="address__pagination"><%= pagination_links @conn, @transactions, ["en", @conn.params["address_id"]], view_style: :bulma, first: true, distance: 1, previous: Phoenix.HTML.raw("&lsaquo;"), next: Phoenix.HTML.raw("&rsaquo;"), path: &address_transaction_path/5 %></div>
+  <div class="address__header">
+    <h1 class="address__heading"><%= gettext "Address" %></h1>
+    <h3 class="address__subheading"><%= @address.hash %></h3>
   </div>
   <div class="address__container">
+    <div class="address__attributes">
+      <dl>
+        <div class="address__item">
+          <dt class="address__item-key"><%= gettext "Balance" %></dt>
+          <dd class="address__item-value address__balance" title="<%= @address.hash %>"><%= format_balance(@address.balance) %> <%= gettext "POA" %></dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="address__container">
     <div class="address__tabs">
-      <h2 class="address__tab"><%= link(gettext("Overview"), to: address_path(@conn, :show, @conn.assigns.locale, @conn.params["address_id"]), class: "address__link") %></h2>
       <h2 class="address__tab address__tab--active"><%= link(gettext("Transactions"), to: address_transaction_path(@conn, :index, @conn.assigns.locale, @conn.params["address_id"]), class: "address__link address__link--active") %></h2>
     </div>
     <div class="transactions__container">
@@ -47,4 +57,8 @@
       </table>
     </div>
   </div>
+
+
+  <div class="address__pagination"><%= pagination_links @conn, @transactions, ["en", @conn.params["address_id"]], view_style: :bulma, first: true, distance: 1, previous: Phoenix.HTML.raw("&lsaquo;"), next: Phoenix.HTML.raw("&rsaquo;"), path: &address_transaction_path/5 %></div>
+
 </section>
