@@ -17,6 +17,13 @@ defmodule Explorer.Transaction.Service do
 
     import Ecto.Query, only: [from: 2]
 
+    def by_address(query, address_id) do
+      from(
+        q in query,
+        where: q.to_address_id == ^address_id or q.from_address_id == ^address_id
+      )
+    end
+
     def to_address(query, to_address_id) do
       from(q in query, where: q.to_address_id == ^to_address_id)
     end

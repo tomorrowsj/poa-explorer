@@ -1,4 +1,4 @@
-defmodule ExplorerWeb.AddressTransactionToController do
+defmodule ExplorerWeb.AddressTransactionController do
   @moduledoc """
     Display all the Transactions that terminate at this Address.
   """
@@ -16,7 +16,7 @@ defmodule ExplorerWeb.AddressTransactionToController do
 
     query =
       Transaction
-      |> Query.to_address(address.id)
+      |> Query.by_address(address.id)
       |> Query.include_addresses()
       |> Query.require_receipt()
       |> Query.require_block()
@@ -24,6 +24,12 @@ defmodule ExplorerWeb.AddressTransactionToController do
 
     page = Repo.paginate(query, params)
     entries = Enum.map(page.entries, &TransactionForm.build_and_merge/1)
-    render(conn, "index.html", transactions: Map.put(page, :entries, entries))
+
+    render(
+      conn,
+      "index.html",
+      address: address,
+      transactions: Map.put(page, :entries, entries)
+    )
   end
 end
