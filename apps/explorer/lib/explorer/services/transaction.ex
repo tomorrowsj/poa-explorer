@@ -17,19 +17,19 @@ defmodule Explorer.Transaction.Service do
 
     import Ecto.Query, only: [from: 2]
 
-    def by_address(query, address_id) do
+    def by_address(query, to_address_id, "to") do
+      from(q in query, where: q.to_address_id == ^to_address_id)
+    end
+
+    def by_address(query, from_address_id, "from") do
+      from(q in query, where: q.from_address_id == ^from_address_id)
+    end
+
+    def by_address(query, address_id, _) do
       from(
         q in query,
         where: q.to_address_id == ^address_id or q.from_address_id == ^address_id
       )
-    end
-
-    def to_address(query, to_address_id) do
-      from(q in query, where: q.to_address_id == ^to_address_id)
-    end
-
-    def from_address(query, from_address_id) do
-      from(q in query, where: q.from_address_id == ^from_address_id)
     end
 
     def recently_seen(query, last_seen) do

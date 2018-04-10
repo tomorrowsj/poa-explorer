@@ -16,7 +16,7 @@ defmodule ExplorerWeb.AddressTransactionController do
 
     query =
       Transaction
-      |> Query.by_address(address.id)
+      |> Query.by_address(address.id, params["filter"])
       |> Query.include_addresses()
       |> Query.require_receipt()
       |> Query.require_block()

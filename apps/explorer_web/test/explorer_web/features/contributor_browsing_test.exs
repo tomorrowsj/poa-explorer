@@ -195,6 +195,12 @@ defmodule ExplorerWeb.UserListTest do
     |> click(css(".address__link", text: "Transactions"))
     |> assert_has(css(".transactions__link--long-hash", text: "0xSk8"))
     |> assert_has(css(".transactions__link--long-hash", text: "0xrazerscooter"))
+    |> click(css(".address__link", text: "To"))
+    |> assert_has(css(".transactions__link--long-hash", text: "0xSk8"))
+    |> refute_has(css(".transactions__link--long-hash", text: "0xrazerscooter"))
+    |> click(css(".address__link", text: "From"))
+    |> assert_has(css(".transactions__link--long-hash", text: "0xrazerscooter"))
+    |> refute_has(css(".transactions__link--long-hash", text: "0xSk8"))
   end
 
   test "views addresses", %{session: session} do

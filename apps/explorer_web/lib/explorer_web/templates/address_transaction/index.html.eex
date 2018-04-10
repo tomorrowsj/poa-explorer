@@ -18,6 +18,11 @@
     <div class="address__tabs">
       <h2 class="address__tab address__tab--active"><%= link(gettext("Transactions"), to: address_transaction_path(@conn, :index, @conn.assigns.locale, @conn.params["address_id"]), class: "address__link address__link--active") %></h2>
     </div>
+    <div>
+      <%= link(gettext("All"), to: address_transaction_path(@conn, :index, @conn.assigns.locale, @conn.params["address_id"]), class: "address__link address__link--active") %>
+      <%= link(gettext("To"), to: address_transaction_path(@conn, :index, @conn.assigns.locale, @conn.params["address_id"], filter: "to"), class: "address__link address__link--active") %>
+      <%= link(gettext("From"), to: address_transaction_path(@conn, :index, @conn.assigns.locale, @conn.params["address_id"], filter: "from"), class: "address__link address__link--active") %>
+    </div>
     <div class="transactions__container">
       <table class="transactions__table">
         <thead class="transactions__header">
@@ -59,6 +64,6 @@
   </div>
 
 
-  <div class="address__pagination"><%= pagination_links @conn, @transactions, ["en", @conn.params["address_id"]], view_style: :bulma, first: true, distance: 1, previous: Phoenix.HTML.raw("&lsaquo;"), next: Phoenix.HTML.raw("&rsaquo;"), path: &address_transaction_path/5 %></div>
+  <div class="address__pagination"><%= pagination_links @conn, @transactions, ["en", @conn.params["address_id"]], filter: @conn.params["filter"], view_style: :bulma, first: true, distance: 1, previous: Phoenix.HTML.raw("&lsaquo;"), next: Phoenix.HTML.raw("&rsaquo;"), path: &address_transaction_path/5 %></div>
 
 </section>
