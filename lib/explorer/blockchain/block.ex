@@ -6,7 +6,8 @@ defmodule Explorer.Blockchain.Block do
   import Ecto.Changeset
 
   alias Ecto.Changeset
-  alias Explorer.Blockchain.Block
+  alias Explorer.Blockchain.{Block, Transaction}
+  alias Explorer.ETH
 
   schema "blocks" do
     field :number, :integer
@@ -29,36 +30,49 @@ defmodule Explorer.Blockchain.Block do
 
   @doc false
   def decode(raw_block) do
+    raw_block
+    |> decode_block()
+    |> decode_transactions(raw_block["transactions"])
+  end
+
+  defp decode_block(raw_block) do
     attrs = %{
       hash: raw_block["hash"],
-      number: decode_int_field(raw_block["number"]),
-      gas_used: decode_int_field(raw_block["gasUsed"]),
-      timestamp: decode_time_field(raw_block["timestamp"]),
+      number: ETH.decode_int_field(raw_block["number"]),
+      gas_used: ETH.decode_int_field(raw_block["gasUsed"]),
+      timestamp: ETH.decode_time_field(raw_block["timestamp"]),
       parent_hash: raw_block["parentHash"],
       miner: raw_block["miner"],
-      difficulty: decode_int_field(raw_block["difficulty"]),
-      total_difficulty: decode_int_field(raw_block["totalDifficulty"]),
-      size: decode_int_field(raw_block["size"]),
-      gas_limit: decode_int_field(raw_block["gasLimit"]),
+      difficulty: ETH.decode_int_field(raw_block["difficulty"]),
+      total_difficulty: ETH.decode_int_field(raw_block["totalDifficulty"]),
+      size: ETH.decode_int_field(raw_block["size"]),
+      gas_limit: ETH.decode_int_field(raw_block["gasLimit"]),
       nonce: raw_block["nonce"] || "0",
     }
 
-    %Block{}
-    |> cast(attrs, @required_attrs)
-    |> validate_required(@required_attrs)
-    |> update_change(:hash, &String.downcase/1)
-    |> case do
+    case changeset(%Block{}, attrs) do
       %Changeset{valid?: true, changes: changes} -> {:ok, changes}
-      %Changeset{valid?: false, errors: errors} -> {:error, errors}
+      %Changeset{valid?: false, errors: errors} -> {:error, {:block, errors}}
     end
   end
 
-  defp decode_int_field(hex) do
-    {"0x", base_16} = String.split_at(hex, 2)
-    String.to_integer(base_16, 16)
-  end
+  defp decode_transactions({:ok, block_changes}, raw_transactions) do
+    raw_transactions
+    |> Enum.map(&Transaction.decode(&1))
+    |> Enum.reduce_while({:ok, block_changes, []}, fn
+      {:ok, trans_changes}, {:ok, block, acc} ->
+        {:cont, {:ok, block, [trans_changes | acc]}}
 
-  defp decode_time_field(field) do
-    field |> decode_int_field() |> Timex.from_unix()
+      {:error, reason}, _ ->
+        {:halt, {:error, {:transaction, reason}}}
+    end)
+  end
+  defp decode_transactions({:error, reason}, _transactions), do: {:error, reason}
+
+  defp changeset(%Block{} = block, attrs) do
+    block
+    |> cast(attrs, @required_attrs)
+    |> validate_required(@required_attrs)
+    |> update_change(:hash, &String.downcase/1)
   end
 end
