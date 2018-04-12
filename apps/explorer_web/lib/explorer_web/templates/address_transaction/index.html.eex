@@ -34,6 +34,7 @@
             <th class="transactions__column-header transactions__column-header--optional"><%= gettext "From" %></th>
             <th class="transactions__column-header transactions__column-header--optional"><%= gettext "To" %></th>
             <th class="transactions__column-header"><%= gettext "Value" %></th>
+            <th class="transactions__column-header"><%= gettext "Fee" %></th>
           </tr>
         </thead>
         <tbody>
@@ -56,6 +57,7 @@
                 <div class="transactions__hash"><%= link(transaction.to_address.hash, to: address_path(@conn, :show, @conn.assigns.locale, transaction.to_address.hash), class: "transactions__link transactions__link--truncated transactions__link--hash") %></div>
               </td>
               <td class="transactions__column transactions__column--value"><%= transaction.value |> ExplorerWeb.WeiConverter.to_ether() |> Decimal.to_string(:normal) %> <%= gettext "POA" %></td>
+              <td class="transactions__column transactions__column--value"><%= calculate_fee(transaction) %> <%= gettext "POA" %></td>
             </tr>
           <% end %>
         </tbody>
