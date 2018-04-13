@@ -67,7 +67,6 @@ defmodule Explorer.Blockchain do
   end
 
   defp insert_blocks(%{}, blocks) do
-    :ok = cascade_delete_stale_transactions(blocks)
     {_, inserted_blocks} =
       Repo.safe_insert_all(Block, blocks,
         returning: [:id, :number],
@@ -75,16 +74,6 @@ defmodule Explorer.Blockchain do
         conflict_target: :number)
 
     {:ok, inserted_blocks}
-  end
-  defp cascade_delete_stale_transactions(blocks) do
-    block_numbers = for block <- blocks, do: block.number
-
-    {_count, _} = Repo.delete_all(from t in Transaction,
-      join: b in assoc(t, :block),
-      where: b.number in ^block_numbers
-    )
-
-    :ok
   end
 
   defp insert_transactions(%{blocks: blocks}, transactions) do

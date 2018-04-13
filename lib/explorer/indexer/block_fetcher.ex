@@ -12,14 +12,14 @@ defmodule Explorer.Indexer.BlockFetcher do
   alias Explorer.{Indexer, Blockchain, ETH}
   alias Explorer.Indexer.Sequence
 
-  @batch_size 10
-  @blocks_concurrency 4
+  @batch_size 50
+  @blocks_concurrency 10
 
   @receipts_batch_size 250
   @receipts_concurrency 10
 
   @internal_batch_size 50
-  @internal_concurrency 2
+  @internal_concurrency 4
 
 
   @doc """
@@ -58,7 +58,7 @@ defmodule Explorer.Indexer.BlockFetcher do
 
   def handle_info(:index, state) do
     {count, missing_ranges} = missing_block_numbers()
-    current_block = Indexer.last_indexed_block_number()
+    current_block = Indexer.next_block_number()
 
     Logger.debug(fn -> "#{count} missed block ranges between genesis and #{current_block}" end)
 

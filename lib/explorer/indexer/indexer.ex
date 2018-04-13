@@ -25,4 +25,14 @@ defmodule Explorer.Indexer do
       nil -> 0
     end
   end
+
+  @doc """
+  TODO
+  """
+  def next_block_number do
+    case last_indexed_block_number() do
+      0 -> 0
+      num -> num + 1
+    end
+  end
 end
