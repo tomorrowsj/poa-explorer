@@ -3,7 +3,7 @@ defmodule Explorer.Repo.Migrations.CreateLogs do
 
   def change do
     create table(:logs) do
-      add :receipt_id, references(:receipts), null: false
+      add :receipt_id, references(:receipts, on_delete: :delete_all), null: false
       # add :address_id, references(:addresses), null: false
       add :index, :integer, null: false
       add :data, :text, null: false

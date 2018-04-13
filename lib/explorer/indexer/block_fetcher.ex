@@ -12,13 +12,13 @@ defmodule Explorer.Indexer.BlockFetcher do
   alias Explorer.{Indexer, Blockchain, ETH}
   alias Explorer.Indexer.Sequence
 
-  @batch_size 100
-  @blocks_concurrency 10
+  @batch_size 10
+  @blocks_concurrency 4
 
   @receipts_batch_size 250
   @receipts_concurrency 10
 
-  @internal_batch_size 10
+  @internal_batch_size 50
   @internal_concurrency 2
 
 

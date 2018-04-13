@@ -3,7 +3,7 @@ defmodule Explorer.Repo.Migrations.CreateReceipts do
 
   def change do
     create table(:receipts) do
-      add :transaction_id, references(:transactions), null: false
+      add :transaction_id, references(:transactions, on_delete: :delete_all), null: false
       add :cumulative_gas_used, :numeric, precision: 100, null: false
       add :gas_used, :numeric, precision: 100, null: false
       add :status, :integer, null: false

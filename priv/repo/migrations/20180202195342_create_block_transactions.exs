@@ -3,8 +3,9 @@ defmodule Explorer.Repo.Migrations.CreateBlockTransactions do
 
   def change do
     create table(:block_transactions, primary_key: false) do
-      add :block_id, references(:blocks)
-      add :transaction_id, references(:transactions), primary_key: true
+      add :block_id, references(:blocks, on_delete: :delete_all)
+      add :transaction_id, references(:transactions, on_delete: :delete_all),
+        primary_key: true
       timestamps null: false
     end
 

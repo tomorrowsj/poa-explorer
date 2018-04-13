@@ -3,7 +3,7 @@ defmodule Explorer.Repo.Migrations.CreateInternalTransactions do
 
   def change do
     create table(:internal_transactions) do
-      add :transaction_id, references(:transactions), null: false
+      add :transaction_id, references(:transactions, on_delete: :delete_all), null: false
       add :to_address_hash, :string
       add :from_address_hash, :string
       # TODO reconcile address relationship

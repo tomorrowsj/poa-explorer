@@ -1,6 +1,23 @@
 defmodule Explorer.ETH do
   @moduledoc """
   Ethereum JSONRPC client.
+
+  ## Configuration
+
+  Configuration for parity URLs can be provided with the
+  following mix config:
+
+
+      config :explorer, :eth_client,
+        url: "https://sokol.poa.network",
+        trace_url: "https://sokol-trace.poa.network",
+        http: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
+
+  Note: the tracing node URL is provided separately from `:url`, via
+  `:trace_url`. The trace URL and is used for `fetch_internal_transactions`,
+  which is only a supported method on tracing nodes. The `:http` option is
+  passed directly to the HTTP library (`HTTPoison`), which forwards the
+  options down to `:hackney`.
   """
   require Logger
 

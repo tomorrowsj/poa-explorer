@@ -3,8 +3,8 @@ defmodule Explorer.Repo.Migrations.MoveAddressKeysToTransactions do
 
   def change do
     alter table(:transactions) do
-      add :to_address_id, references(:addresses)
-      add :from_address_id, references(:addresses)
+      add :to_address_id, references(:addresses, on_delete: :delete_all)
+      add :from_address_id, references(:addresses, on_delete: :delete_all)
     end
   end
 

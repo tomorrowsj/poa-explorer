@@ -58,9 +58,7 @@ defmodule Explorer.Blockchain do
     {blocks, transactions} = extract_blocks(raw_blocks)
 
     Multi.new()
-    |> Multi.insert_all(:blocks, Block, blocks,
-      returning: [:id, :number],
-      on_conflict: :replace_all, conflict_target: :number)
+    |> Multi.run(:blocks, &insert_blocks(&1, blocks))
     |> Multi.run(:transactions, &insert_transactions(&1, transactions))
     |> Multi.run(:internal, &insert_internal(&1, internal_transactions))
     |> Multi.run(:receipts, &insert_receipts(&1, receipts))
@@ -68,7 +66,28 @@ defmodule Explorer.Blockchain do
     |> Repo.transaction()
   end
 
-  defp insert_transactions(%{blocks: {_, blocks}}, transactions) do
+  defp insert_blocks(%{}, blocks) do
+    :ok = cascade_delete_stale_transactions(blocks)
+    {_, inserted_blocks} =
+      Repo.safe_insert_all(Block, blocks,
+        returning: [:id, :number],
+        on_conflict: :replace_all,
+        conflict_target: :number)
+
+    {:ok, inserted_blocks}
+  end
+  defp cascade_delete_stale_transactions(blocks) do
+    block_numbers = for block <- blocks, do: block.number
+
+    {_count, _} = Repo.delete_all(from t in Transaction,
+      join: b in assoc(t, :block),
+      where: b.number in ^block_numbers
+    )
+
+    :ok
+  end
+
+  defp insert_transactions(%{blocks: blocks}, transactions) do
     blocks_map = for block <- blocks, into: %{}, do: {block.number, block}
     transactions = for transaction <- transactions do
       %{id: id} = Map.fetch!(blocks_map, transaction.block_number)
