@@ -1,4 +1,7 @@
 defmodule Explorer.Blockchain.Log do
+  @moduledoc """
+  TODO
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -10,16 +13,18 @@ defmodule Explorer.Blockchain.Log do
   )a
 
   schema "logs" do
-    belongs_to(:receipt, Receipt)
+    field :index, :integer
+    field :data, :string
+    field :type, :string
+    field :first_topic, :string
+    field :second_topic, :string
+    field :third_topic, :string
+    field :fourth_topic, :string
+
+    belongs_to :receipt, Receipt
+    has_one :transaction, through: [:receipt, :transaction]
     # belongs_to(:address, Address)
-    has_one(:transaction, through: [:receipt, :transaction])
-    field(:index, :integer)
-    field(:data, :string)
-    field(:type, :string)
-    field(:first_topic, :string)
-    field(:second_topic, :string)
-    field(:third_topic, :string)
-    field(:fourth_topic, :string)
+
     timestamps()
   end
 

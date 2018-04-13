@@ -1,14 +1,16 @@
 defmodule Explorer.Blockchain.BlockTransaction do
-  @moduledoc "Connects a Block to a Transaction"
-
-  use Explorer.Schema
+  @moduledoc """
+  TODO
+  """
+  use Ecto.Schema
+  import Ecto.Changeset
 
   alias Explorer.Blockchain.{BlockTransaction, Block, Transaction}
 
   @primary_key false
   schema "block_transactions" do
-    belongs_to(:block, Block)
-    belongs_to(:transaction, Transaction, primary_key: true)
+    belongs_to :block, Block
+    belongs_to :transaction, Transaction, primary_key: true
     timestamps()
   end
 

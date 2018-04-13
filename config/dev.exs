@@ -60,7 +60,9 @@ config :explorer, Explorer.Repo,
   adapter: Ecto.Adapters.Postgres,
   database: "explorer_dev",
   hostname: "localhost",
-  pool_size: 20,
+  pool_size: 80,
+  timeout: 60_000,
+  pool_timeout: 60_000,
   loggers: []
 
 # Configure Quantum

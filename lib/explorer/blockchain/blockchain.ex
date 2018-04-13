@@ -55,7 +55,7 @@ defmodule Explorer.Blockchain do
   TODO
   """
   def import_blocks(raw_blocks, internal_transactions, receipts) do
-    {blocks, transactions} = decode_blocks(raw_blocks)
+    {blocks, transactions} = extract_blocks(raw_blocks)
 
     Multi.new()
     |> Multi.insert_all(:blocks, Block, blocks,
@@ -69,56 +69,45 @@ defmodule Explorer.Blockchain do
   end
 
   defp insert_transactions(%{blocks: {_, blocks}}, transactions) do
-    blocks = for block <- blocks, into: %{}, do: {block.number, block}
+    blocks_map = for block <- blocks, into: %{}, do: {block.number, block}
     transactions = for transaction <- transactions do
-      %{id: id} = Map.fetch!(blocks, transaction.block_number)
+      %{id: id} = Map.fetch!(blocks_map, transaction.block_number)
 
       transaction
       |> Map.put(:block_id, id)
       |> Map.delete(:block_number)
     end
 
-    {_, inserted} = Repo.safe_insert_all(Transaction, transactions, returning: [:id, :hash])
+    {_, inserted} = Repo.safe_insert_all(Transaction, transactions,
+      returning: [:id, :hash])
     {:ok, inserted}
   end
 
   defp insert_internal(%{transactions: transactions}, internal_transactions) do
     timestamps = timestamps()
 
-    internals = Enum.reduce(transactions, [], fn %{hash: hash, id: id}, acc ->
+    internals = Enum.flat_map(transactions, fn %{hash: hash, id: id} ->
       case Map.fetch(internal_transactions, hash) do
         {:ok, traces} ->
-          Enum.reduce(traces, acc, fn trace, acc ->
-            decoded_trace =
-              trace
-              |> InternalTransaction.decode()
-              |> Map.put(:transaction_id, id)
-              |> Map.merge(timestamps)
-
-            [decoded_trace | acc]
-          end)
-
-        :error -> acc
+          Enum.map(traces, &InternalTransaction.extract(&1, id, timestamps))
+        :error -> []
       end
     end)
 
-    {_, inserted} = Repo.safe_insert_all(InternalTransaction, internals, on_conflict: :nothing)
+    {_, inserted} =
+      Repo.safe_insert_all(InternalTransaction, internals, on_conflict: :nothing)
+
     {:ok, inserted}
   end
 
-  defp insert_receipts(%{transactions: transactions}, receipts) do
+  defp insert_receipts(%{transactions: transactions}, raw_receipts) do
     timestamps = timestamps()
 
-    receipts = Receipt.decode(receipts)
     {receipts_to_insert, logs_map} =
       Enum.reduce(transactions, {[], %{}}, fn trans, {receipts_acc, logs_acc} ->
-        case Map.fetch(receipts, trans.hash) do
-          {:ok, {receipt, logs}} ->
-            receipt =
-              receipt
-              |> Map.merge(timestamps)
-              |> Map.put(:transaction_id, trans.id)
-
+        case Map.fetch(raw_receipts, trans.hash) do
+          {:ok, raw_receipt} ->
+            {receipt, logs} = Receipt.extract(raw_receipt, trans.id, timestamps)
             {[receipt | receipts_acc], Map.put(logs_acc, trans.id, logs)}
 
           :error ->
@@ -133,18 +122,12 @@ defmodule Explorer.Blockchain do
   end
 
   defp insert_logs(%{receipts: %{inserted: receipts, logs: logs_map}}) do
-    timestamps = timestamps()
     logs_to_insert =
       Enum.reduce(receipts, [], fn receipt, acc ->
         case Map.fetch(logs_map, receipt.transaction_id) do
           {:ok, []} -> acc
           {:ok, [_|_] = logs} ->
-            logs = Enum.map(logs, fn log ->
-              log
-              |> Map.put(:receipt_id, receipt.id)
-              |> Map.merge(timestamps)
-            end)
-
+            logs = Enum.map(logs, &Map.put(&1, :receipt_id, receipt.id))
             logs ++ acc
          end
       end)
@@ -153,30 +136,20 @@ defmodule Explorer.Blockchain do
     {:ok, inserted_logs}
   end
 
-  defp timestamps do
-    now = Ecto.DateTime.utc()
-    %{inserted_at: now, updated_at: now}
-  end
-
-  defp decode_blocks(raw_blocks) do
+  defp extract_blocks(raw_blocks) do
     timestamps = timestamps()
 
     {blocks, transactions} =
       Enum.reduce(raw_blocks, {[], []}, fn raw_block, {blocks_acc, trans_acc} ->
-        {:ok, block, transactions} = Block.decode(raw_block)
-        block = Map.merge(block, timestamps)
-        trans_acc = Enum.reduce(transactions, trans_acc, fn transaction, acc ->
-          transaction =
-            transaction
-            |> Map.put(:block_number, block.number)
-            |> Map.merge(timestamps)
-
-          [transaction | acc]
-        end)
-
-        {[block | blocks_acc], trans_acc}
+        {:ok, block, transactions} = Block.extract(raw_block, timestamps)
+        {[block | blocks_acc], trans_acc ++ transactions}
       end)
 
-    {Enum.reverse(blocks), Enum.reverse(transactions)}
+    {Enum.reverse(blocks), transactions}
+  end
+
+  defp timestamps do
+    now = Ecto.DateTime.utc()
+    %{inserted_at: now, updated_at: now}
   end
 end

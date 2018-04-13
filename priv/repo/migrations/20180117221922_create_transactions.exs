@@ -8,7 +8,7 @@ defmodule Explorer.Repo.Migrations.CreateTransactions do
       timestamps null: false
     end
 
-    create unique_index(:transactions, ["(lower(hash))"], name: :transactions_hash_index)
+    create unique_index(:transactions, [:hash])
     create index(:transactions, [:block_id])
   end
 end

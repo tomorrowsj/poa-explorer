@@ -1,34 +1,30 @@
 defmodule Explorer.Blockchain.Transaction do
-  @moduledoc "Models a Web3 transaction."
+  use Ecto.Schema
+  import Ecto.Changeset
 
-  use Explorer.Schema
   alias Ecto.Changeset
-
-  # alias Explorer.Address
-  # alias Explorer.BlockTransaction
-  # alias Explorer.InternalTransaction
-  # alias Explorer.Receipt
-  alias Explorer.Blockchain.{Transaction, Block}
-  alias Explorer.ETH
+  alias Explorer.Blockchain.{Transaction, Block, Receipt}
 
   schema "transactions" do
-    # has_one(:receipt, Receipt)
-    belongs_to(:block, Block)
-    belongs_to(:from_address, Address)
-    belongs_to(:to_address, Address)
-    has_many(:internal_transactions, InternalTransaction)
-    field(:hash, :string)
-    field(:value, :decimal)
-    field(:gas, :decimal)
-    field(:gas_price, :decimal)
-    field(:input, :string)
-    field(:nonce, :integer)
-    field(:public_key, :string)
-    field(:r, :string)
-    field(:s, :string)
-    field(:standard_v, :string)
-    field(:transaction_index, :string)
-    field(:v, :string)
+    field :hash, :string
+    field :value, :decimal
+    field :gas, :decimal
+    field :gas_price, :decimal
+    field :input, :string
+    field :nonce, :integer
+    field :public_key, :string
+    field :r, :string
+    field :s, :string
+    field :standard_v, :string
+    field :transaction_index, :string
+    field :v, :string
+
+    belongs_to :block, Block
+    belongs_to :from_address, Address
+    belongs_to :to_address, Address
+    has_one :receipt, Receipt
+    has_many :internal_transactions, InternalTransaction
+
     timestamps()
   end
 
@@ -47,27 +43,30 @@ defmodule Explorer.Blockchain.Transaction do
     |> unique_constraint(:hash)
   end
 
-  def decode(raw_transaction) do
+  def decode(raw_transaction, block_number, %{} = timestamps) do
     attrs = %{
       hash: raw_transaction["hash"],
-      value: raw_transaction["value"] |> ETH.decode_int_field(),
-      gas: raw_transaction["gas"] |> ETH.decode_int_field(),
-      gas_price: raw_transaction["gasPrice"] |> ETH.decode_int_field(),
+      value: raw_transaction["value"],
+      gas: raw_transaction["gas"],
+      gas_price: raw_transaction["gasPrice"],
       input: raw_transaction["input"],
-      nonce: raw_transaction["nonce"] |> ETH.decode_int_field(),
+      nonce: raw_transaction["nonce"],
       public_key: raw_transaction["publicKey"],
       r: raw_transaction["r"],
       s: raw_transaction["s"],
       standard_v: raw_transaction["standardV"],
       transaction_index: raw_transaction["transactionIndex"],
-      v: raw_transaction["v"]
+      v: raw_transaction["v"],
     }
 
     case changeset(%Transaction{}, attrs) do
-      %Changeset{valid?: true, changes: changes} -> {:ok, changes}
-      %Changeset{valid?: false, errors: errors} -> {:error, errors}
+      %Changeset{valid?: true, changes: changes} ->
+        {:ok, changes
+              |> Map.put(:block_number, block_number)
+              |> Map.merge(timestamps)}
+
+      %Changeset{valid?: false, errors: errors} ->
+        {:error, errors}
     end
   end
-
-  def null, do: %Transaction{}
 end

@@ -28,6 +28,7 @@ config :logger, :console,
 
 config :explorer, :eth_client,
   url: "https://sokol.poa.network",
+  trace_url: "https://sokol-trace.poa.network",
   http: [recv_timeout: 60_000, timeout: 60_000, hackney: [pool: :eth]]
 
 config :ethereumex,

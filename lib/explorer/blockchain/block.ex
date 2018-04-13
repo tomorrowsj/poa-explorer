@@ -7,7 +7,6 @@ defmodule Explorer.Blockchain.Block do
 
   alias Ecto.Changeset
   alias Explorer.Blockchain.{Block, Transaction}
-  alias Explorer.ETH
 
   schema "blocks" do
     field :number, :integer
@@ -29,36 +28,36 @@ defmodule Explorer.Blockchain.Block do
                      total_difficulty size gas_limit gas_used timestamp)a
 
   @doc false
-  def decode(raw_block) do
+  def extract(raw_block, %{} = timestamps) do
     raw_block
-    |> decode_block()
-    |> decode_transactions(raw_block["transactions"])
+    |> extract_block(timestamps)
+    |> extract_transactions(raw_block["transactions"], timestamps)
   end
 
-  defp decode_block(raw_block) do
+  defp extract_block(raw_block, %{} = timestamps) do
     attrs = %{
       hash: raw_block["hash"],
-      number: ETH.decode_int_field(raw_block["number"]),
-      gas_used: ETH.decode_int_field(raw_block["gasUsed"]),
-      timestamp: ETH.decode_time_field(raw_block["timestamp"]),
+      number: raw_block["number"],
+      gas_used: raw_block["gasUsed"],
+      timestamp: raw_block["timestamp"],
       parent_hash: raw_block["parentHash"],
       miner: raw_block["miner"],
-      difficulty: ETH.decode_int_field(raw_block["difficulty"]),
-      total_difficulty: ETH.decode_int_field(raw_block["totalDifficulty"]),
-      size: ETH.decode_int_field(raw_block["size"]),
-      gas_limit: ETH.decode_int_field(raw_block["gasLimit"]),
+      difficulty: raw_block["difficulty"],
+      total_difficulty: raw_block["totalDifficulty"],
+      size: raw_block["size"],
+      gas_limit: raw_block["gasLimit"],
       nonce: raw_block["nonce"] || "0",
     }
 
     case changeset(%Block{}, attrs) do
-      %Changeset{valid?: true, changes: changes} -> {:ok, changes}
+      %Changeset{valid?: true, changes: changes} -> {:ok, Map.merge(changes, timestamps)}
       %Changeset{valid?: false, errors: errors} -> {:error, {:block, errors}}
     end
   end
 
-  defp decode_transactions({:ok, block_changes}, raw_transactions) do
+  defp extract_transactions({:ok, block_changes}, raw_transactions, %{} = timestamps) do
     raw_transactions
-    |> Enum.map(&Transaction.decode(&1))
+    |> Enum.map(&Transaction.decode(&1, block_changes.number, timestamps))
     |> Enum.reduce_while({:ok, block_changes, []}, fn
       {:ok, trans_changes}, {:ok, block, acc} ->
         {:cont, {:ok, block, [trans_changes | acc]}}
@@ -67,7 +66,9 @@ defmodule Explorer.Blockchain.Block do
         {:halt, {:error, {:transaction, reason}}}
     end)
   end
-  defp decode_transactions({:error, reason}, _transactions), do: {:error, reason}
+  defp extract_transactions({:error, reason}, _transactions, _timestamps) do
+    {:error, reason}
+  end
 
   defp changeset(%Block{} = block, attrs) do
     block

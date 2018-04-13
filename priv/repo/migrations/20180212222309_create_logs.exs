@@ -4,7 +4,7 @@ defmodule Explorer.Repo.Migrations.CreateLogs do
   def change do
     create table(:logs) do
       add :receipt_id, references(:receipts), null: false
-      add :address_id, references(:addresses), null: false
+      # add :address_id, references(:addresses), null: false
       add :index, :integer, null: false
       add :data, :text, null: false
       add :type, :string, null: false
@@ -21,7 +21,7 @@ defmodule Explorer.Repo.Migrations.CreateLogs do
     create index(:logs, :second_topic)
     create index(:logs, :third_topic)
     create index(:logs, :fourth_topic)
-    create index(:logs, :address_id)
+    # create index(:logs, :address_id)
     create unique_index(:logs, [:receipt_id, :index])
   end
 end

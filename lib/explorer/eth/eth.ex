@@ -9,13 +9,13 @@ defmodule Explorer.ETH do
       recv_timeout: 60_000, timeout: 60_000, max_connections: 1000])
   end
 
-  def decode_int_field(hex) do
+  def decode_int(hex) do
     {"0x", base_16} = String.split_at(hex, 2)
     String.to_integer(base_16, 16)
   end
 
-  def decode_time_field(field) do
-    field |> decode_int_field() |> Timex.from_unix()
+  def decode_time(field) do
+    field |> decode_int() |> Timex.from_unix()
   end
 
   def fetch_transaction_receipts(hashes) when is_list(hashes) do
@@ -34,7 +34,16 @@ defmodule Explorer.ETH do
   defp handle_receipts({:ok, results}) do
     results_map =
       Enum.into(results, %{}, fn %{"id" => hash, "result" => receipt} ->
-        {hash, receipt}
+        {hash, Map.merge(receipt, %{
+          "transactionHash" => String.downcase(receipt["transactionHash"]),
+          "transactionIndex" => decode_int(receipt["transactionIndex"]),
+          "cumulativeGasUsed" => decode_int(receipt["cumulativeGasUsed"]),
+          "gasUsed" => decode_int(receipt["gasUsed"]),
+          "status" => decode_int(receipt["status"]),
+          "logs" => Enum.map(receipt["logs"], fn log ->
+            Map.merge(log, %{"logIndex" => decode_int(log["logIndex"])})
+          end)
+        })}
       end)
 
     {:ok, results_map}
@@ -60,7 +69,8 @@ defmodule Explorer.ETH do
     results_map =
       Enum.into(results, %{}, fn
         %{"error" => error} -> throw({:error, error})
-        %{"id" => hash, "result" => %{"trace" => traces}} -> {hash, traces}
+        %{"id" => hash, "result" => %{"trace" => traces}} ->
+          {hash, Enum.map(traces, &decode_trace(&1))}
       end)
 
     {:ok, results_map}
@@ -69,6 +79,20 @@ defmodule Explorer.ETH do
   end
   defp handle_internal_transactions({:error, reason}) do
     {:error, reason}
+  end
+  defp decode_trace(%{"action" => action} = trace) do
+    trace
+    |> Map.merge(%{
+      "action" => Map.merge(action, %{
+        "value" => decode_int(action["value"]),
+        "gas" => decode_int(action["gas"]),
+      })
+    })
+    |> put_gas_used()
+  end
+  defp put_gas_used(%{"error" => _} = trace), do: trace
+  defp put_gas_used(%{"result" => %{"gasUsed" => gas}} = trace) do
+    put_in(trace, ["result", "gasUsed"], decode_int(gas))
   end
 
   @doc """
@@ -97,10 +121,36 @@ defmodule Explorer.ETH do
         %{"result" => %{} = block}, {blocks, next} -> {[block | blocks], next}
       end)
 
-    {:ok, next, blocks, {block_start, block_end}}
+    {:ok, next, decode_blocks(blocks), {block_start, block_end}}
   end
   defp handle_get_block_by_number({:error, reason}, block_start, block_end) do
     {:error, reason, {block_start, block_end}}
+  end
+  defp decode_blocks(blocks) do
+    Enum.map(blocks, fn block ->
+      Map.merge(block, %{
+        "hash" => String.downcase(block["hash"]),
+        "number" => decode_int(block["number"]),
+        "gasUsed" => decode_int(block["gasUsed"]),
+        "timestamp" => decode_time(block["timestamp"]),
+        "difficulty" => decode_int(block["difficulty"]),
+        "totalDifficulty" => decode_int(block["totalDifficulty"]),
+        "size" => decode_int(block["size"]),
+        "gasLimit" => decode_int(block["gasLimit"]),
+        "transactions" => decode_transactions(block["transactions"]),
+      })
+    end)
+  end
+  defp decode_transactions(transactions) do
+    Enum.map(transactions, fn transaction ->
+      Map.merge(transaction, %{
+        "hash" => String.downcase(transaction["hash"]),
+        "value" => decode_int(transaction["value"]),
+        "gas" => decode_int(transaction["gas"]),
+        "gasPrice" => decode_int(transaction["gasPrice"]),
+        "nonce" => decode_int(transaction["nonce"]),
+      })
+    end)
   end
 
   defp json_rpc(payload, url) do

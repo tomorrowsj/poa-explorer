@@ -7,6 +7,6 @@ defmodule Explorer.Repo.Migrations.CreateAddress do
       timestamps null: false
     end
 
-    create unique_index(:addresses, ["(lower(hash))"], name: :addresses_hash_index)
+    create unique_index(:addresses, [:hash])
   end
 end

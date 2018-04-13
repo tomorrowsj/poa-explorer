@@ -17,7 +17,7 @@ defmodule Explorer.Repo.Migrations.CreateBlocks do
       timestamps null: false
     end
 
-    create unique_index(:blocks, ["(lower(hash))"], name: :blocks_hash_index)
-    create index(:blocks, [:number])
+    create unique_index(:blocks, [:hash])
+    create unique_index(:blocks, [:number])
   end
 end
